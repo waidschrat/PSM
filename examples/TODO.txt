@@ -1,0 +1,18 @@
+
+Population Stochastic Modelling (PSM)
+
+
+
+TODO list 
+
+- for OMEGA=NULL: add phi=h(theta,Z) instead of phi=theta in APL.KF.R
+
+- Add possibility for scalling parameter on init. state covar. (P_s in CTSM)
+
+
+
+Future work.
+
+- Non-linear models
+
+- Move more code to Fortran to support openMP

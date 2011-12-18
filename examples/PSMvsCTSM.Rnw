@@ -1,0 +1,377 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,graphics}
+\usepackage{color}
+% \VignetteIndexEntry{Population Stochastic Modelling: Model definition, description and examples}
+% \VignetteDepends{PSM}
+
+\newcommand{\bs}{\boldsymbol}
+
+\usepackage{boxedminipage}
+
+<<Sweavepath,include=FALSE,echo=FALSE>>=
+sweavepath <- paste(R.home(),"/share/texmf/",sep="")
+@ 
+\usepackage{\Sexpr{sweavepath}Sweave}
+%%%
+% look and feel of the R code
+%%%
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{fontsize=\small,fontshape=sl}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{fontsize=\small}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{fontsize=\small,fontshape=sl}
+%%%
+% put R code and R-code output in a boxed minipage:
+%%%
+\definecolor{light}{gray}{.75} 
+\renewenvironment{Schunk}
+{\begin{center} \begin{boxedminipage}{0.95\textwidth} }
+{\end{boxedminipage}\end{center}}
+
+
+\begin{document}
+
+<<PackageDescription,include=FALSE,echo=FALSE>>=
+options(keep.source = TRUE, width = 60)
+foo <- packageDescription("PSM")
+library("PSM")
+foo[['Built']] <- gsub("[#$%^&_{}~]",replacement="-", x=foo[['Built']])
+options(digits=7)
+@
+
+\title{Population Stochastic Modelling (PSM): \\
+Comparison with CTSM} 
+
+\date{\today}
+
+\author{Stig Mortensen and S\o ren Klim}
+\maketitle
+
+\begin{center}
+\begin{tabular}{lp{6cm}}
+Package:& \Sexpr{foo[['Package']]}, version \Sexpr{foo[['Version']]}\\
+URL:    & \Sexpr{foo[['URL']]} 
+\end{tabular}
+\end{center}
+
+\vspace{.2cm}
+
+%\setcounter{tocdepth}{1}
+\tableofcontents
+
+\vspace{.2cm}
+
+
+\section{Purpose}
+
+The first stage model of PSM is based on the stochastic state space
+model defined in CTSM. For 'single-subject' data in a model without
+random effects the two programs should therefore give equal state
+estimates and likelihood function.
+
+This document compares the estimation results of PSM and
+CTSM\cite{kristensen03} for a fed-batch bioreactor example. The model
+is specified in the CTSM User's Guide\cite{kristensen03b} on page 55.
+The comparison is based on simulated data created in CTSM for a single
+bioreactor.
+
+\newpage
+
+\section{Setting up the example}
+
+The non-linear model contains three states $X$, $S$ and $V$ which are
+the biomass concentration, the substrate concentration and the volume.
+It has one input $F$ which is the feed flow rate. There are three
+output/response variable $y1$, $y2$ and $y3$ which directly observes
+the tree states.
+
+\subsection{Loading data}
+
+Initially the data is loaded from the original file \verb|sde0_1.csv|
+created by CTSM. The data file is contained in the examples folder in
+CTSM.
+
+<<LoadData>>=
+library(PSM)
+# Load the Data and Variables
+tmpData <- read.table("sde0_1.csv",sep=";", col.names=c("Time","F","y1","y2","y3"))
+Time=tmpData$Time
+Y=t(tmpData[,c("y1","y2","y3")])
+U=t(as.matrix(tmpData[,c("F")]))
+Data <- list(Time=Time,Y=Y,U=U)
+@ 
+
+
+\subsection{Model specification}
+
+The model object is specified in R as follows.
+\newpage
+
+<<ModelDefinition>>=
+MyModel <- list()
+MyModel$X0 = function(Time,phi,U) {
+  matrix(c(phi$x0,phi$s0,phi$v0),ncol=1)
+}
+MyModel$h = function(eta,theta,covar) {
+  phi = theta
+}
+MyModel$Functions$f = function(x,u,time,phi) {
+  X <- x[1]; S <- x[2]; V <- x[3]; F <- u[1]
+  mu <- phi$mumax*S/(phi$k2*S^2+S+phi$k1)
+  matrix(c(
+           mu*X-F*X/V,
+           -mu*X/phi$Y+F*(phi$sf-S)/V,
+           F
+           ),ncol=1)
+}
+MyModel$Functions$df = function(x,u,time,phi) {
+  X <- x[1]; S <- x[2]; V <- x[3]; F <- u[1]
+  kssk = (phi$k2*S^2+S+phi$k1);
+  matrix(c(
+           phi$mumax*S/kssk-F/V,
+           phi$mumax/kssk*X-phi$mumax*S/(kssk)^2*X*(2*phi$k2*S+1),
+           F*X/V^2,
+           -phi$mumax*S/(kssk)/phi$Y,
+           -phi$mumax/(kssk)*X/phi$Y+phi$mumax*S/(kssk)^2*X/phi$Y*(2*phi$k2*S+1)-F/V,
+           -F*(phi$sf-S)/V^2,
+           0,
+           0,
+           0
+           ),nrow=3,ncol=3,byrow=TRUE)
+}
+MyModel$Functions$g = function(x,u,time,phi) {
+  x
+}
+MyModel$Functions$dg = function(x,u,time,phi) {
+  diag(3)
+}
+MyModel$S = function(u,time,phi) {
+  diag(c(phi$s11,phi$s22,phi$s33))
+}
+MyModel$SIG = function(u,time,phi) {
+  diag(c(phi$sig11,phi$sig22,phi$sig33))
+}
+@ 
+
+\section{Results of comparison}
+
+\subsection{Likelihood function value}
+
+The objective functions of PSM and CTSM are both the negative
+log-likelihood function. The two are compared based ML-estimated
+parameters found by CTSM. These parameter estimates are copied from
+CTSM and specified below. At the same time the model is prepared to
+estimate 5 of these parameters (\verb|mumax|, \verb|k1|, \verb|s11|,
+\verb|s22| and \verb|s33|) later in this comparison.
+
+<<EvalLikelihood>>=
+ctsmTHETA <- c(mumax=1.0022E+00,k1=3.1629E-02,
+             s11=7.5248E-03,s22=1.0636E-03,s33=1.1388E-02)
+MyModel$ModelPar = function(THETA) {
+  list(theta=list(
+         mumax=THETA['mumax'],
+         k1   =THETA['k1'],
+         k2   =0.5,
+         Y    =0.5,
+         sf   =10,
+         sig11=9.6704E-28,
+         sig22=1.7471E-06,
+         sig33=1.0903E-08,
+         s11  =THETA['s11'],
+         s22  =THETA['s22'],
+         s33  =THETA['s33'],
+         x0   =1.0095E+00,
+         s0   =2.3835E-01,
+         v0   =1.0040E+00))
+}
+theta <- MyModel$ModelPar(ctsmTHETA)$theta
+@ 
+
+The value of the CTSM negative log-likelihood function based on the
+parameters above are 
+
+\begin{equation}
+  \text{CTSM:} \quad -\log L (\theta)= -388.4857 ~~.
+  \label{ctsmL}
+\end{equation}
+
+The negative log-likelihood function in PSM can be evaluated by
+directly calling the Extended Kalman Filter using the same
+parameter values
+
+<<EvalLikelihood>>=
+(negLogL <- ExtKalmanFilter(theta,MyModel,Data)) #CTSM: -388.4857 #PSM: -388.4689
+@ 
+
+\noindent and the result can be seen to be very similar to the value found by
+CTSM as shown in Equation \eqref{ctsmL}.
+
+\subsection{Uncertainty for parameter estimates}
+
+<<Cheat,echo=FALSE>>=
+#load("Case_Bioreactor.RData") #loads fit + sm1
+options(digits=4)
+@ 
+
+In CTSM parameter uncertainty is given by standard deviation (SD)
+estimates for each parameter. In PSM parameter uncertainty is given by
+either SD or a 95\% Wald confidence interval based on the Hessian of
+the log-likelihood function.
+
+To find the confidence intervals in PSM a parameter search is started
+with an initial guess 10\% away from the CTSM ML-estimates. 
+
+<<ParInit>>=
+MyPar <- list(LB = 0.5*ctsmTHETA,
+              Init = ctsmTHETA*1.1,
+              UB = 1.5*ctsmTHETA)
+@ 
+
+The parameter estimation is performed using the function PSM.estimate
+which returns the negative log-likelihood value, ML-estimates and the
+Wald confidence intervals. The result from PSM.estimate is shown below.
+
+<<PSMestimate>>=
+#if(FALSE)
+(fit <- PSM.estimate(MyModel,list(Data),MyPar,CI=TRUE)[1:5])
+#fit[1:3]
+@
+
+<<PSMestimate,echo=FALSE>>=
+ctsm <- matrix(0,nrow=2,ncol=length(ctsmTHETA))
+rownames(ctsm) <- c('MLE','SD')
+colnames(ctsm) <- Pname <- names(ctsmTHETA)
+ctsm['MLE',] <- ctsmTHETA
+ctsm['SD',] <- c(3.3419E-03,1.5977E-03,9.7618E-04,1.3763E-04,1.4960E-03)
+ctsmEstimates <- ctsm
+@ 
+
+The corresponding ML estimates and SD estimates in CTSM are copied
+from the CTSM output and shown below. The estimates in PSM and CTSM
+can be seen to be almost equal.
+
+<<CTSMestimate>>=
+ctsmEstimates
+@
+
+To visually compare the error estimates in PSM and CTSM a Wald confidence interval
+is generated from CTSM as MLE$\pm 1.96 \cdot$SD. This result of the
+comparison is shown if Figure \ref{fig:fig1}.
+
+
+\begin{figure}[hptb]
+\begin{center}
+<<label=figure1,fig=TRUE,width=4,height=6,echo=FALSE>>=
+par(mfrow=c(5,1),mar=c(2,4,2,2)+.1)
+for(i in 1:length(Pname)) {
+  psmCI <- fit$CI[c(1,3),Pname[i]]
+  ctsmCI <- ctsm['MLE',Pname[i]]+ctsm['SD',Pname[i]]*1.96*c(-1,1)
+  plot.new()
+  plot.window(ylim=c(0.5,3),xlim=range(c(psmCI,ctsmCI)))
+  axis(2,1:2,c('PSM','CTSM'),tick=FALSE,las=1,line=-1); axis(1);
+  #box(bty='l')
+  title(main=Pname[i],line=-.5)
+  # CI limits
+  lines(rep(psmCI,each=3),1+c(-.2,.2,0,0,.2,-.2),col=2,lwd=2)
+  lines(rep(ctsmCI,each=3),2+c(-.2,.2,0,0,.2,-.2),col=4,lwd=2)
+  # MLE
+  points(fit$CI[2,Pname[i]],1,pch=23,bg=2,col=2,cex=1.5)
+  points(ctsm['MLE',Pname[i]],2,pch=23,bg=4,col=4,cex=1.5)
+}
+@
+\end{center}
+\caption{Visual comparison of error estimates for ML-estimated parameters in
+  PSM and CTSM.}
+\label{fig:fig1}
+\end{figure}
+
+\newpage
+
+\subsection{State estimates}
+
+The state estimates in PSM and CTSM should also be equal. This is
+expected to be the case for the state and state covariance one-step
+predictions since the likelihood function is evaluated
+based on these.
+
+The smoothed state estimate is the optimal state estimate where all
+data is used at each time point. To compare these a smoothed state
+estimate is generated in CTSM and loaded into R in the variable
+CTSMSmooth. The two first rows of this variable are shown below.
+
+<<CTSMsmooth,echo=FALSE>>=
+
+nameY <- paste('y',1:3,sep='')
+nameXp <- paste('Xp',1:3,sep='')
+nameXf <- paste('Xf',1:3,sep='')
+nameXs <- paste('Xs',1:3,sep='')
+CTSMPred = read.table("BioReactorCTSMPred.csv",sep=";",
+  col.names=c("Time",nameXp,paste('SD',nameXp),nameY, paste('SD',nameY)))
+CTSMFilter = read.table("BioReactorCTSMFilter.csv",sep=";",
+  col.names=c("Time",nameXf,paste('SD',nameXf)))
+CTSMSmooth = read.table("BioReactorCTSMSmooth.csv",sep=";",
+  col.names=c("Time",nameXs,paste('SD',nameXs)))
+@
+
+<<CTSMsmooth2>>=
+CTSMSmooth[1:2,]
+@
+
+The state estimates are then created in PSM using the command shown below.
+
+<<PSMsmooth>>=
+#if(FALSE)
+  sm1 <- PSM.smooth(MyModel,list(Data),ctsmTHETA)[[1]]
+       
+@ 
+
+The state estimates from PSM and CTSM are compared in Figure
+\ref{fig:fig2}. Based on a visual inspection these can be seen to be
+very alike. 
+ 
+\begin{figure}[hptb]
+\begin{center}
+<<label=figure2,fig=TRUE,width=4,height=4,echo=FALSE>>=
+par(mfrow=c(3,1),mar=c(3,2,1.5,0)+.1)
+for(i in 1:3) {
+  plot(sm1$Time,sm1$Xs[i,],type="l",col=2,xlab='Time',ylab=nameXs[i])
+  title(main=paste('State smooting estimate',nameXs[i]))
+  legend(x='topleft',  legend=c('PSM','CTSM'),lty=1:2,col=2:1,lwd=1:2)
+  lines(CTSMSmooth[,'Time'],CTSMSmooth[,i+1],lty=2,lwd=2)
+}
+@
+\end{center}
+\caption{Comparison of smoothed estimate of states. }
+\label{fig:fig2}
+\end{figure}
+
+An exact numerical analysis of the differences can also be performed
+as shown in the line below.
+
+
+
+<<PCTdeviation>>=
+(pct <- max(abs(t(CTSMSmooth[,2:4])-sm1$Xs)/sm1$Xs*100))
+@ 
+
+
+ As it can be seen the analysis shows that
+smoothed state estimates differ at most \Sexpr{round(pct,3)}\%.
+
+
+\small
+\begin{thebibliography}{99}
+  \addcontentsline{toc}{section}{\refname}
+  \bibitem{kristensen03}
+    Kristensen NR, Madsen H (2003) Continous time stochastic
+    modelling: CTSM 2.3 mathematics guide, Technical University of
+    Denmark \\
+    http://www2.imm.dtu.dk/ctsm/MathGuide.pdf
+  \bibitem{kristensen03b}
+    Kristensen NR, Madsen H (2003) Continous time stochastic
+    modelling: CTSM 2.3 User's Guide, Technical University of
+    Denmark \\
+    http://www2.imm.dtu.dk/ctsm/UsersGuide.pdf
+  
+    
+\end{thebibliography}
+
+\end{document}

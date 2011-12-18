@@ -1,0 +1,5 @@
+R CMD Rdconv -o PSM-package.tex --type=latex ../../man/PSM-package.Rd
+R CMD Rdconv -o PSM.estimate.tex --type=latex ../../man/PSM.estimate.Rd
+R CMD Rdconv -o PSM.simulate.tex --type=latex ../../man/PSM.simulate.Rd
+R CMD Rdconv -o PSM.smooth.tex --type=latex ../../man/PSM.smooth.Rd
+R CMD Rdconv -o PSM.template.tex --type=latex ../../man/PSM.template.Rd
