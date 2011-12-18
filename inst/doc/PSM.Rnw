@@ -5,7 +5,7 @@
 \newcommand{\bs}{\boldsymbol}
 % \VignetteIndexEntry{Population Stochastic Modelling: Model definition, description and examples}
 % \VignetteDepends{PSM}
-\usepackage{boxedminipage}
+% \usepackage{boxedminipage}
 
 % Sweave hack by inserting %\usepackage{Sweave} then Sweave does not insert it's own line
 %\usepackage{Sweave}
@@ -58,8 +58,8 @@ sweavepath <- gsub("[\\]",'/',R.home("share/texmf/"))
 % put R code and R-code output in a boxed minipage:
 %%%
 \renewenvironment{Schunk}
-{\begin{center} \begin{boxedminipage}{0.95\textwidth} }
-{\end{boxedminipage}\end{center}}
+{\begin{center} \begin{minipage}{0.95\textwidth} }
+{\end{minipage}\end{center}}
 
 
 \begin{document}

@@ -4,7 +4,7 @@ function(phi, Model, Data) {
 
 
   # Do forward EKF
-  o <- ExtKalmanFilter(phi=phi, Model=Model, Data=Data, output=TRUE)
+  o <- ExtKalmanFilter(phi=phi, Model=Model, Data=Data, outputInternals=TRUE)
 
   Time  <- Data[["Time"]]
   Y     <- Data[["Y"]]

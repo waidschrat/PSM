@@ -47,9 +47,9 @@ function (theta,OMEGA,Model,Data,GUIFlag=0,fast=TRUE,Linear=NULL) {
   
   phi <- Model$h(eta=out$par,theta=theta,covar=Data$covar)
   if(Linear) {
-    o <- LinKalmanFilter(phi=phi, Model=Model, Data=Data, output=TRUE, fast=fast)
+    o <- LinKalmanFilter(phi=phi, Model=Model, Data=Data, outputInternals=TRUE, fast=fast)
   } else {
-    o <- ExtKalmanFilter(phi=phi, Model=Model, Data=Data, output=TRUE)
+    o <- ExtKalmanFilter(phi=phi, Model=Model, Data=Data, outputInternals=TRUE)
   }
   
   # Calculate stepsize in central diffenrence gradient
