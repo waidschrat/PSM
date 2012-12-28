@@ -1,13 +1,13 @@
-# Default NAMESPACE created by R
-# Remove the previous line if you edit this file
+# Export
+export(PSM.simulate, PSM.estimate, PSM.smooth, PSM.plot, PSM.template)
 
-# Export all names
-exportPattern(".")
+# Load shared objects
+useDynLib(PSM)
 
 # Import all packages listed as Imports or Depends
 import(
   MASS,
   numDeriv,
-  odesolve,
+  deSolve,
   ucminf
 )
