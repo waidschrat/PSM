@@ -1,13 +1,16 @@
 # Export
-export(PSM.simulate, PSM.estimate, PSM.smooth, PSM.plot, PSM.template)
+export(PSM.simulate, PSM.estimate, PSM.smooth, PSM.plot, PSM.template, matexp)
 
 # Load shared objects
-useDynLib(PSM)
+useDynLib(PSM, .registration = TRUE)
 
 # Import all packages listed as Imports or Depends
 import(
   MASS,
   numDeriv,
   deSolve,
-  ucminf
+  ucminf,
+  graphics,
+  stats
 )
+
