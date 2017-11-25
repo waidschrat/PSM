@@ -11,7 +11,7 @@
 %\usepackage{Sweave}
 <<Sweavepath,include=FALSE,echo=FALSE>>=
 sweavepath <- gsub("[\\]",'/',R.home("share/texmf/"))
-@ 
+@
 %\usepackage{\Sexpr{sweavepath}Sweave} % not used - inserted below instead.
 
 
@@ -31,11 +31,10 @@ sweavepath <- gsub("[\\]",'/',R.home("share/texmf/"))
 \ProcessOptions
 
 \RequirePackage{graphicx,fancyvrb}
-\IfFileExists{upquote.sty}{\RequirePackage{upquote}}{}
 
 \ifthenelse{\boolean{Sweave@gin}}{\setkeys{Gin}{width=0.8\textwidth}}{}%
 \ifthenelse{\boolean{Sweave@ae}}{%
-  \RequirePackage[T1]{fontenc}  
+  \RequirePackage[T1]{fontenc}
   \RequirePackage{ae}
 }{}%
 
@@ -74,7 +73,7 @@ options(digits=4)
 
 
 \title{Population Stochastic Modelling (PSM): \\
-Model definition, description and examples} 
+Model definition, description and examples}
 
 \date{\Sexpr{format(as.Date(foo[['Date']]),"%B %e, %Y")}}
 
@@ -86,7 +85,7 @@ Model definition, description and examples}
 \begin{tabular}{ll}
 Package:& \Sexpr{foo[['Package']]}, version \Sexpr{foo[['Version']]}\\
 %Built:  & \Sexpr{foo[['Built']]} \\
-URL:    & \Sexpr{foo[['URL']]} 
+URL:    & \Sexpr{foo[['URL']]}
 \end{tabular}
 \end{center}
 
@@ -112,7 +111,7 @@ ordinary differential equations.
 \section{Model definition}
 
 A mixed-effects model is used to describe data with the following
-general structure 
+general structure
 
 \begin{equation}
 \bs y_{ij}, \quad i = 1, ..., N, \quad j = 1, ..., n_i
@@ -122,7 +121,7 @@ general structure
 individual $i$, $N$ is the number of individuals and $n_i$ is the
 number of measurements for individual $i$. In a mixed-effects model
 the variation is split into intra-individual variation and
-inter-individual variation, which is modelled by a first 
+inter-individual variation, which is modelled by a first
 and second stage model. For further detail regarding the model
 definition please refer to \cite{mortensen07, overgaard05, kristensen03}.
 
@@ -134,7 +133,7 @@ consists of two parts, namely a set of continuous state equations
 defining the dynamics of the system and a set of discrete measurement
 equations, which defines a functional relationship between the states
 of the system and the obtained measurements. In the linear form the
-state space equations are written as 
+state space equations are written as
 
 \begin{eqnarray}
 d\bs x_t & = & ( \bs A(\bs\phi_i) \bs x_t + \bs B(\bs\phi_i) \bs u_t)dt +\bs\sigma_\omega(\bs\phi_i)d\bs\omega_t \label{sssm1}\\
@@ -154,7 +153,7 @@ continuous time variable, the states of the model and the optional
 inputs  at time $t$ are denoted $\bs x_t$ and $\bs u_t$
 respectively and $\bs \omega_t$ is a standard Wiener process such that
 $\bs\omega_{t_2} - \bs\omega_{t_1} \in  N(\bs 0,|t_2-t_1|\bs I)$. Both
-the state, measurement and input can be 
+the state, measurement and input can be
 multi-dimensional, and are in such cases thus represented by a vector
 at time $t_{ij}$. The input is assumed constant between sample times
 (zero-order hold). The individual model parameters are denoted
@@ -173,7 +172,7 @@ f$ and $\bs g$. These functions are defined as
 
 \noindent and must be given with the model specification. PSM will
 check the user defined Jacobian functions with numerical evaluations of
-the Jacobians of $\bs f$ and $\bs g$ to ensure that they are correct. 
+the Jacobians of $\bs f$ and $\bs g$ to ensure that they are correct.
 It is possible to avoid specifying the Jacobian functions in the model
 and use numerical approximations instead, but this will increase
 estimation time at least ten-fold. See the help file in \verb+R+ for
@@ -184,30 +183,30 @@ $\bs\phi_i$, and $u_{i1}$ and defines the model state at time $t_1$
 before update based on the first observation. The initial state can thus
 be included in the parameter estimation as necessary. The covariance
 matrix of the initial state  is
-set to the integral of the Wiener process and the dynamics of the system over 
+set to the integral of the Wiener process and the dynamics of the system over
 the first sample interval $t_2-t_1$ as also done in \cite{kristensen03}.
 
 The concept of states is essential to the understanding of the
 model setup. The state vector describes the state of the entire system
 and is only observable through measurement noise. The actual relation
 between measurements and states is defined in the measurement equation
-\eqref{sssm2}. A state can represent many different aspects 
-of the system of interest, e.g. concentrations or amounts in 
+\eqref{sssm2}. A state can represent many different aspects
+of the system of interest, e.g. concentrations or amounts in
 compartments, a volume, a parameter with unknown time varying behavior
-or an input to the system, that we wish to estimate. 
+or an input to the system, that we wish to estimate.
 
 \subsubsection*{Second stage model}
 
-The second stage model describes the variation of the individual 
+The second stage model describes the variation of the individual
 parameters $\bs\phi_i$ between individuals and is defined as
 
 \begin{equation}
-\bs \phi_i = \bs h(\bs \theta, \bs \eta_i, \bs Z_i) 
+\bs \phi_i = \bs h(\bs \theta, \bs \eta_i, \bs Z_i)
 \label{eqInd}
 \end{equation}
 
 \noindent where $\bs \eta_i$ is the multivariate random effect
-parameter for the 
+parameter for the
 $i$th individual, which is assumed Gaussian distributed with mean
 zero and covariance $\bs \Omega$, i.e.  $\bs \eta_i \in N(\bs 0,\bs
 \Omega)$.  The fixed effect parameter of the model is $\bs
@@ -220,7 +219,7 @@ zero and covariance $\bs \Omega$, i.e.  $\bs \eta_i \in N(\bs 0,\bs
 Parameter estimation is done using maximum likelihood. The likelihood
 function will only be outlined briefly here, so please refer to
 \cite{mortensen07, overgaard05, kristensen03} for a detailed
-description. 
+description.
 
 The full set of model parameters to be estimated for the final mixed
 effects model based on SDEs are the matrices $\bs\Sigma$,
@@ -232,7 +231,7 @@ $\bs\sigma_\omega$ are included in $\bs\theta$.
 
 In PSM the function \verb|ModelPar| defines which part of the model
 parameters should estimated. These parameters are denoted $\bs\Theta$ (in
-PSM: \verb|THETA|) such that  
+PSM: \verb|THETA|) such that
 
 \begin{equation}
 \texttt{ModelPar}:  ~~ \bs\Theta \rightarrow (\bs\theta, \bs\Omega) .
@@ -243,7 +242,7 @@ population likelihood function cannot be evaluated analytically and
 thus a second-order Taylor expansion is made of the individual a
 posteriori log-likelihood function around the value of $\hat{\bs
 \eta}_i$ that maximizes it. The objective function for PSM is thereby
-given as 
+given as
 
 \begin{eqnarray}
   - \log L(\bs \Theta)
@@ -305,11 +304,11 @@ types are:
 \item Simulation estimate: $\hat{\bs x}_{i(j|0)}$, $\hat{\bs P}_{i(j|0)}$ \\
 Provides an estimate of the state evolution for a repeated experiment,
 without updating based on measurements. This is an ODE-like estimate,
-but it also yields a confidence band for the state evolution. 
+but it also yields a confidence band for the state evolution.
 \item Prediction estimate: $\hat{\bs x}_{i(j|j-1)}$, $\hat{\bs P}_{i(j|j-1)}$ \\
 The prediction is used here to give the conditional density for
 the next observation at time $t_{ij}$ given the observations up to
-$t_{i(j|j-1)}$. 
+$t_{i(j|j-1)}$.
 \item Filtering estimate: $\hat{\bs x}_{i(j|j)}$, $\hat{\bs P}_{i(j|j)}$ \\
 Best estimate at time $t_{ij}$ given the observations up to
 time $t_{ij}$.
@@ -331,24 +330,24 @@ densities to form the likelihood function. The filter estimate is
 the best obtainable state estimate during the experiment, where
 the subsequent observations are not present. The third type of state
 estimate is the smoothed estimate. This provides the optimal state and
-state covariance estimate ($\hat{\bs x}_{i(j|N)}$ and $\hat{\bs P}_{i(j|N)}$) based on all obtained observations, both prior and 
+state covariance estimate ($\hat{\bs x}_{i(j|N)}$ and $\hat{\bs P}_{i(j|N)}$) based on all obtained observations, both prior and
 subsequent to the time of interest. The smoothed estimate is therefore
 often the natural estimate of choice when studying the behavior of
-the system in \emph{post hoc} analysis \cite{mortensen07}. 
+the system in \emph{post hoc} analysis \cite{mortensen07}.
 
 \subsubsection*{Comparison to NONMEM}
 
 The NONMEM software is a widely used tool for mixed effects modelling
 based on ODEs \cite{nonmem}. NONMEM also performs maximum likelihood
 estimation using the FOCE approximation and for many it might thus be
-of interest to know how the two objective functions are related. 
+of interest to know how the two objective functions are related.
 
 The objective function in NONMEM ($l_{NM}$) is advertised as $-2\log L$ but
 in fact it lacks a constant equal to the likelihood of the data. The PSM
 objective function ($l_{PSM}$) is  $-\log L$ as seen in
 Eq. \eqref{PSMobj} and the relation thereby becomes $l_{NM} = 2\cdot
 l_{PSM} - \log(2\pi) \cdot \sum n_i $. The relation has been tested
-for a number of models \cite{mortensen07}. 
+for a number of models \cite{mortensen07}.
 
 \subsubsection*{Models with no random effects}
 
@@ -387,7 +386,7 @@ at least in order to find the first rough parameter estimates.
 \newpage
 \section{User's guide to PSM}
 
-PSM is built around two key objects. These are 
+PSM is built around two key objects. These are
 
 \begin{itemize}
 \item a data object and
@@ -408,7 +407,7 @@ models as shown below to print a template for the model.
 
 <<PSMtemplateLinear>>=
 PSM.template(Linear=TRUE,dimX=3,dimY=1,dimU=0,dimEta=3)
-@ 
+@
 
 The structure of the model object and what each function should return
 can be derived from the template
@@ -423,7 +422,7 @@ The input arguments to the functions are defined as follow:
 \begin{tabular}{cp{7cm}}
 \toprule
 Input arg. & Type \\
-\hline 
+\hline
 \verb+THETA+ &  Vector (possibly named) containing the parameters to be
 maximum likelihood estimated.\\
 %\hline
@@ -478,7 +477,7 @@ times and it also has 'BMI' as a covariate for each individual.
 MyData <- list()
 MyData[[1]] <- list(Time=1:4,Y=matrix(c(2.1,3.2,3.4,3.7),nrow=1),covar=c(BMI=20.1))
 MyData[[2]] <- list(Time=3:7,Y=matrix(c(1.9,2.1,2.0,2.9,3.5),nrow=1),covar=c(BMI=23.4))
-@ 
+@
 
 \subsubsection*{Main functions}
 
@@ -497,7 +496,7 @@ The PSM program is accessed in R through five main functions:
   Optimal estimates of model states based on estimated parameters. It
   returns both the predicted, filtered and smoothed state
   estimates and for models with random effects an estimate of these are
-  also returned. 
+  also returned.
 \item \verb+PSM.plot(Data, Smooth, indiv, type)+\\
   Creates a matrix plot with a column for each individual. The rows
   can show observations, inputs, simulated and estimated states, residuals and
@@ -507,7 +506,7 @@ The PSM program is accessed in R through five main functions:
   Creates a template with R-syntax to help setup a model in PSM. It
   works for both linear and non-linear models and it can output the
   resulting template to the screen or a file.
- 
+
 \end{itemize}
 
 For detailed information please refer to the help files in R.
@@ -526,33 +525,12 @@ For detailed information please refer to the help files in R.
 
 \noindent The following provides two examples to illustrate the use of PSM. It
 may also be useful when trying to set up a new model, by using the
-code shown as model templates. 
+code shown as model templates.
 The document is written using
 Sweave\footnote{http://www.ci.tuwien.ac.at/$\sim$leisch/Sweave/}, and thus
 all R-code in the examples shown here can be extracted into an R-script
-file by writing 
-
-%http://www.bioconductor.org/docs/vignettes.html
-%<<vignetteSRC>>=
-%vignetteSrc = list.files(pattern = "Rnw$",
-%                    system.file("doc", package = "PSM"),
-%                    full.names = TRUE)
-%vignetteSrc
-%for (v in vigSrc) Stangle(v)
-%
-%@ 
-<<vignetteSRC>>=
-vignetteSrc = list.files(pattern = "PSM.Rnw",
-                    system.file("doc", package = "PSM"),
-                    full.names = TRUE)
-#vignetteSrc
-Stangle(vignetteSrc)
-@ 
-
-\noindent in R. The file is saved in the current folder
-(\verb+getwd()+) which allows for easy
-access to further experimentation with the code behind the examples.
-
+file by calling \verb+Stangle()+ on the Sweave file, which is found in
+the PSM package installation folder.
 
 To save time in the processing of the document all computer intensive
 operations are skipped by setting a flag \verb|Redo = FALSE| and
@@ -563,7 +541,7 @@ based on the new simulated data sets.
 
 <<Redo.flag>>=
 Redo = FALSE
-@ 
+@
 
 \newpage
 
@@ -583,7 +561,7 @@ of the model is shown in Figure \ref{fig:modeldose}.
 
 The model is used to simulate data based on two doses of $1500mg$
 given after 30 and 180 minutes. In state space formulation the model
-is described as 
+is described as
 
 \begin{eqnarray}
   dA_1 &=& \left(-\frac{CL}{V_1^i}A_1 - \frac{CL_d}{V_1^i}A_1 +
@@ -593,14 +571,14 @@ is described as
   Y &=& A_1/V_1^i + e
 \end{eqnarray}
 
-\noindent or in matrix notation 
+\noindent or in matrix notation
 
 \begin{eqnarray}
   d\bs A_t &=& \left[ \begin{array}{cc}
       -(CL/V_1^i + CL_d/V_1^i) & CL_d/V_2  \\
-    CL_d/V_1^i & - CL_d/V_2 \end{array} \right]\bs A_tdt + \left[ 
+    CL_d/V_1^i & - CL_d/V_2 \end{array} \right]\bs A_tdt + \left[
   \begin{array}{cc} \sigma_1 & 0 \\ -\sigma_1 & 0 \end{array}
-\right]d\bs\omega\\ 
+\right]d\bs\omega\\
   Y_{ij} &=& [ \begin{array}{cc} 1/V_1^i & 0 \end{array}]\bs A_{ij} + e_{ij}
 \end{eqnarray}
 
@@ -625,8 +603,8 @@ The model can be defined in R as shown below.
 <<Dose.ModelDefinition>>=
 Model.SimDose = list()
 Model.SimDose$Matrices = function(phi) {
-  V1i <- phi$V1i; V2=phi$V2; CL = phi$CL; CLd = phi$CLd; 
-  matA <- matrix(c(-(CL+CLd)/V1i ,  CLd/V2 ,   
+  V1i <- phi$V1i; V2=phi$V2; CL = phi$CL; CLd = phi$CLd;
+  matA <- matrix(c(-(CL+CLd)/V1i ,  CLd/V2 ,
                    CLd/V1i , -CLd/V2 ) ,nrow=2,byrow=T)
   matC <- matrix(c(1/V1i,0),nrow=1)
   list(matA=matA,matC=matC)
@@ -634,7 +612,7 @@ Model.SimDose$Matrices = function(phi) {
 Model.SimDose$X0 = function(Time=Na,phi,U=Na) {
   matrix(0,nrow=2)
 }
-Model.SimDose$SIG = function(phi) { 
+Model.SimDose$SIG = function(phi) {
   sig1 <- phi[["sig1"]]
   matrix(c( sig1,0,
            -sig1,0), nrow=2, byrow=T)
@@ -654,7 +632,7 @@ Model.SimDose$ModelPar = function(THETA){
        OMEGA=matrix(THETA['OMEGA1']) )
 }
 SimDose.THETA <-  c(CL=0.05,V1 = 5, sig1 = 10 , S = 20 , OMEGA1 = .2)
-@ 
+@
 
 Five parameters in the model will be estimated, as it can be
 seen from the \verb|ModelPar| function above. The parameters to be estimated
@@ -674,16 +652,16 @@ for (i in 1:N) {
                                 Amount = c(1500,1500)
                                 )
 }
-@ 
+@
 
 Everything is now setup and the simulation can be performed.
 
 <<Dose.SimulateData>>=
 if(Redo) {
   SimDose.Data <- PSM.simulate(Model.SimDose, SimDose.Data, SimDose.THETA, deltaTime=.1)
-} else 
+} else
   load("simdose.RData")
-@ 
+@
 
 The simulated data are shown in Figure \ref{fig:fig1} using the
 \verb+PSM.plot+ function. The first row
@@ -721,7 +699,7 @@ parA <- list(LB=SimDose.THETA*.5, Init=SimDose.THETA , UB=SimDose.THETA*1.5 )
 if(Redo) fitA <- PSM.estimate(Model.SimDose,SimDose.Data,parA,CI=T)
 fitA[1:5]
 SimDose.THETA
-@ 
+@
 
 It is seen that the estimated parameters are reasonably close to the
 true values in \verb+SimDose.THETA+ and the 95\% confidence intervals
@@ -737,11 +715,11 @@ output from the smoothing function is also shown using the
 more detailed description of the output.
 
 <<Dose.EstimateStates>>=
-if(Redo) 
+if(Redo)
   out <- PSM.smooth(Model.SimDose, SimDose.Data, fitA$THETA, subsample = 20)
 # View the data structure
 names(out[[1]])
-@ 
+@
 
 By comparing the smoothed estimates of the states to the
 true simulated states, it can be seen that they are very close. This
@@ -796,7 +774,7 @@ which will be modelled and estimated.
 The simulation model for the C-peptide measurements is based on the
 commonly used two compartment model for C-peptide as shown in Figure
 \ref{fig:modelisr}. The kinetic parameters are set equal to the Van
-Cauter estimates \cite{vancauter92}. 
+Cauter estimates \cite{vancauter92}.
 
 \begin{figure}[htb]
   \centering
@@ -821,7 +799,7 @@ times. The model can be defined as
 \end{eqnarray}
 
 \noindent which is linear and can thus again be written on matrix
-form.  
+form.
 
 The model is initialized in steady state just prior to the
 first meal time. The individual variation in the model is included in
@@ -868,20 +846,20 @@ Model.SimISR$X0 = function(Time=NA,phi,U=NA) {
   tmp[2] <- C0*k1/k2
   tmp[3] <- C0*ke
   tmp[4] <- 0
-  matrix(tmp,ncol=1) 
+  matrix(tmp,ncol=1)
 }
 Model.SimISR$SIG = function(phi) {
-  diag( c(0,0,phi[["SIG33"]],0)) 
+  diag( c(0,0,phi[["SIG33"]],0))
 }
 Model.SimISR$S = function(phi) {
-  return( matrix(phi[["S"]])) 
-} 
+  return( matrix(phi[["S"]]))
+}
 Model.SimISR$h = function(eta,theta,covar) {
   phi <- theta
   phi[["B"]] <- theta[["B"]]*exp(eta[1])
   phi[["K"]] <- theta[["K"]]*exp(eta[2])
   phi[["C0"]] <- theta[["C0"]]*exp(eta[3])
-  return(phi) 
+  return(phi)
 }
 Model.SimISR$ModelPar = function(THETA){
   list(theta=list(C0=900,S=8500,
@@ -892,11 +870,11 @@ Model.SimISR$ModelPar = function(THETA){
        )
 }
 
-@ 
+@
 
 For this example two individuals will be simulated. They will both be
 sampled at predefined time points during 24H. This defined as below
-together with the input data for each individual. 
+together with the input data for each individual.
 
 <<ISR.SimulateData>>=
 Sim.Data <- vector(mode="list",length=2)
@@ -904,11 +882,11 @@ for (i in 1:2) {
   Sim.Data[[i]]$Time <- c( 0,15,30,45,60,75,90,120,150,180,210,240,270,300,330,
                           360,420,480,600,615,630,645,660,675,690,720,750,780,810,
                           840,960,1140,1320,1410,1440)
-  Sim.Data[[i]]$U <- matrix(c( rep(1,35) , 
+  Sim.Data[[i]]$U <- matrix(c( rep(1,35) ,
                               as.numeric( Sim.Data[[i]]$Time %in% c(0,15,240,600,615)) )
                             ,byrow=T,nrow=2)
 }
-@ 
+@
 
 Both the model, sample times and input is now prepared and the
 simulation can be performed. The parameter estimates are taken from
@@ -918,10 +896,10 @@ simulation can be performed. The parameter estimates are taken from
 <<ISR.SimulateData>>=
 Sim.THETA <-  c(a1=0.02798, a2=0.01048, SIG33=4 , K=427.63 , B=1.7434)
 if(Redo) {
-  Sim.Data <- PSM.simulate(Model.SimISR, Sim.Data, Sim.THETA, deltaTime=.1 ) 
-} else 
+  Sim.Data <- PSM.simulate(Model.SimISR, Sim.Data, Sim.THETA, deltaTime=.1 )
+} else
   load("simisr.RData")
-@ 
+@
 
 
 \begin{figure}[htb]
@@ -950,7 +928,7 @@ for(id in 1:2) {
 The next step is to generate a model for estimation of ISR. It is
 again based on the model illustrated in Figure \ref{fig:modelisr} only
 this time the ISR is simply modelled as a random walk. Thus no
-information about the meal times is used in the estimation of ISR. 
+information about the meal times is used in the estimation of ISR.
 
 The model simplification is done by replacing Eq. \eqref{eqisr3} and
 \eqref{eqisr4} by Eq. \eqref{eq:isrny} below. The model for estimation
@@ -959,7 +937,7 @@ $ISR$ based on the observed (simulated) data for $C1$.
 
 \begin{equation}
   dISR = \sigma_{ISR} \label{eq:isrny}
-\end{equation}  
+\end{equation}
 
 <<ISR.EstimationModel>>=
 Model.Est <- list(
@@ -988,7 +966,7 @@ Model.Est <- list(
               return(list(theta=list(C0=THETA['C0'],S=THETA['S'],SIG33=THETA['SIG33']),
                           OMEGA=matrix(THETA['OMEGA'])))}
             )
-@ 
+@
 
 Looking at the \verb|ModelPar|-function it is seen that it is chosen
 to include the average initial concentration $C_1(0)$, measurement
@@ -1003,7 +981,7 @@ the simulated data before estimation.
 Pop.Data <- Sim.Data
 for (i in 1:2)
   Pop.Data[[i]]$U <- NULL
-@ 
+@
 
 The data and model for estimation is now prepared, and the model can
 be estimated by calling \verb|PSM.estimate|. This is done below and
@@ -1016,7 +994,7 @@ par1 <- list(LB   = c(C0= 200, S= 50^2, SIG33= 0, OMEGA=.0 ),
              UB   = c(C0=3000, S=150^2, SIG33=15, OMEGA=.50))
 if(Redo) obj1 <- PSM.estimate(Model.Est, Pop.Data, par1,CI=T,trace=1)
 obj1[1:5]
-@ 
+@
 
 
 
@@ -1042,7 +1020,7 @@ plotted for reference.
 <<ISR.EstimateStates>>=
 if(Redo)
   Data.Sm <- PSM.smooth( Model.Est , Pop.Data, obj1$THETA, subsample=10)
-@ 
+@
 
 
 \begin{figure}[hptb]
@@ -1112,36 +1090,36 @@ for(ID in 1:2) {
     models using stochastic differential equations: applications for
     estimation of insulin secretion rates. J of Parmacokinet
     Pharmacodyn 34:623-642
-    
+
   \bibitem{overgaard05}
     Overgaard RV, Jonsson N, Torn\o e CW, Madsen H (2005) Non-linear
     mixed-effects models with stochastic differential equations:
     implementation of an estimation algorithm. J of Parmacokinet
     Pharmacodyn 32(1):85-107
-  
+
   \bibitem{kristensen03}
     Kristensen NR, Madsen H (2003) Continous time stochastic
     modelling: CTSM 2.3 mathematics guide, Technical University of
     Denmark \\
     http://www2.imm.dtu.dk/ctsm/MathGuide.pdf
-    
+
   \bibitem{nonmem}
     Beal SL, Sheiner LB (2004) NONMEM\textregistered Users Guide. University of
     California, NONMEM Project Group.
-    
+
   \bibitem{klim06}
     Klim S, Mortensen SB (2006) Stochastic PK/PD Modelling. M.Sc. thesis,
     Informatics and Mathematical Modelling, Technical University of
-    Denmark. \\ 
+    Denmark. \\
     http://www2.imm.dtu.dk/pubdb/views/edoc\_download.php/4533/pdf/imm4533.pdf
-    
+
   \bibitem{vancauter92}
     Van Cauter E, Mestrez F, Sturis J, Polonsky KS (1992) Estimation of
     insulin secretion rates from C-peptide levels. Comparison of
     individual and standard kinetic parameters for C-peptide
     clearance. Diabetes, 41(3), pp. 368-77.
-  
-    
+
+
 \end{thebibliography}
 
 \end{document}
