@@ -33,7 +33,7 @@ matexp(a, dt=1,order = 8)
   Niels Rode Kristensen, http://www2.imm.dtu.dk/~ctsm/
   
 }
-\author{Søren Klim, Stig B. Mortensen}
+\author{Soeren Klim, Stig B. Mortensen}
 
 \note{For indepth material on matrix exponentials - see Moler and van Loan (2003).}
 

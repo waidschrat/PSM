@@ -40,13 +40,13 @@
 }
 
 \author{
-  Stig B. Mortensen and Søren Klim
+  Stig B. Mortensen and Soeren Klim
   
-  Maintainer: Søren Klim <skl@imm.dtu.dk>
+  Maintainer: Robert Miller <robert.miller@tu-dresden.de>
 }
 
 \references{
-  Stig B. Mortensen, Søren Klim, Bernd Dammann, Niels R. Kristensen,
+  Stig B. Mortensen, Soeren Klim, Bernd Dammann, Niels R. Kristensen,
   Henrik Madsen, Rune V. Overgaard. A matlab framework for estimation of
   NLME models using stochastic differential equations: Application for
   estimation of insulin secretion rates. J Pharmacokinet Pharmacodyn

@@ -46,7 +46,7 @@ Number of random effects (can be zero).
 \references{ Please visit \url{http://www.imm.dtu.dk/psm} or refer to
   the help page for \code{\link{PSM}}. } 
 
-\author{ Stig B. Mortensen and Søren Klim }
+\author{ Stig B. Mortensen and Soeren Klim }
 
 \seealso{  \code{\link{PSM}}, \code{\link{PSM.estimate}},
   \code{\link{PSM.smooth}}, \code{\link{PSM.template}}
