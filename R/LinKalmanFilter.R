@@ -335,73 +335,74 @@ function( phi , Model , Data , echo=FALSE, outputInternals=FALSE,fast=TRUE) {
           return(negLogLike)
           }
         
-        # Abort state pred if finished
-        if(k==dimT) break
-        
-        if(echo) cat("State Prediction...\n")            
-
-        # State prediction
-        tau   <- Time[k+1]-Time[k]
-
-        # Use large time invariant matrix
-        if(echo) cat("Starting matrix exponential...\n")
-        if(echo) print(tau)
-        if(echo) print(matASIGSIGTzerosmatAT)         
-        tmp   <- matexp(tau * matASIGSIGTzerosmatAT)
-        if(echo) cat("Finished matexp()\n")         
-        
-
-        # CTSM (1.48)
-        PHI   <- t.default(tmp[(dimX+1):(2*dimX),(dimX+1):(2*dimX),drop=FALSE])
-        # CTSM (1.49)
-        IntExpASIG <- PHI %*% tmp[1:dimX,(dimX+1):(dimX*2),drop=FALSE]
-        # CTSM (1.45)
-        Pp[,,k+1] <- PHI %*% Pf[,,k] %*% t.default(PHI) + IntExpASIG
-
-        # Different formulaes depending on A and INPUTS
-        if( !singA ) {
+        # Prediction, if the last time has not yet been reached
+        if(k<dimT){
+          if(echo) cat("State Prediction...\n")            
+          
+          # State prediction
+          tau   <- Time[k+1]-Time[k]
+          
+          # Use large time invariant matrix
+          if(echo) cat("Starting matrix exponential...\n")
+          if(echo) print(tau)
+          if(echo) print(matASIGSIGTzerosmatAT)         
+          tmp   <- matexp(tau * matASIGSIGTzerosmatAT)
+          if(echo) cat("Finished matexp()\n")         
+          
+          
+          # CTSM (1.48)
+          PHI   <- t.default(tmp[(dimX+1):(2*dimX),(dimX+1):(2*dimX),drop=FALSE])
+          # CTSM (1.49)
+          IntExpASIG <- PHI %*% tmp[1:dimX,(dimX+1):(dimX*2),drop=FALSE]
+          # CTSM (1.45)
+          Pp[,,k+1] <- PHI %*% Pf[,,k] %*% t.default(PHI) + IntExpASIG
+          
+          # Different formulaes depending on A and INPUTS
+          if( !singA ) {
             # Special case #3: Non-singular A, zero order hold on inputs.
             Xp[,k+1] <- { if( ModelHasInput) {
-                              PHI%*%Xf[,k,drop=FALSE]+ matA.Inv %*%(PHI-DIAGDIMX)%*%matB%*%Uk
-                              } else {
-                              PHI%*%Xf[,k,drop=FALSE] } }
-        } else {
+              PHI%*%Xf[,k,drop=FALSE]+ matA.Inv %*%(PHI-DIAGDIMX)%*%matB%*%Uk
+            } else {
+              PHI%*%Xf[,k,drop=FALSE] } }
+          } else {
+            
+            # Special case #1: Singular A, zero order hold on inputs.
+            if(!ModelHasInput) {
+              Xp[,k+1] <- PHI %*% Xf[,k]
+            }
+            else  {
+              # matA is singular and has INPUT
+              # CTSM Mathguide Special Case no.1 page 10
+              
+              PHITilde      <- Ua.T %*% PHI %*% Ua
+              PHITilde1     <- PHITilde[1:rankA,1:rankA,drop=FALSE]
+              # PHITilde2     <- PHITilde[1:rankA,(rankA+1):dimX,drop=F]
+              # PHITilde1Inv  <- solve(PHITilde1)
+              
+              ATilde    <- Ua.T %*% matA %*% Ua
+              ATilde1   <- ATilde[1:rankA,1:rankA,drop=FALSE]
+              ATilde2   <- ATilde[1:rankA,(rankA+1):dimX,drop=FALSE]
+              ATilde1Inv <- solve.default(ATilde1)
+              
+              IntExpAtildeS <- ZERODIMXDIMX
+              # Insert upper left part of matrix [1:rankA 1:rankA]
+              IntExpAtildeS[1:rankA , 1:rankA] <- ATilde1Inv %*% (PHITilde1-DIAGRANKA)
+              # Lower left part
+              # IntExpAtildeS[(rankA+1):dimX , 1:rankA]   <- 0
+              # Upper Right
+              IntExpAtildeS[1:rankA,(rankA+1):dimX] <- ATilde1Inv %*%
+                (IntExpAtildeS[1:rankA,1:rankA]-DIAGRANKA*tau)%*%ATilde2
+              # Lower right
+              # Changed 2007-12-03 SKLI IntExpAtildeS[(rankA+1):dimX,(rankA+1):dimX] <- diag(1,dimX-rankA)*tau
+              IntExpAtildeS[(rankA+1):dimX,(rankA+1):dimX] <- DIAGDIMXRANKA*tau
+              
+              # Insert State prediction CTSM  (1.60)
+              Xp[,k+1] <- PHI %*% Xf[,k]+ Ua %*% IntExpAtildeS %*% Ua.T %*% matB %*% Uk
+              
+            } # end else
+          } # end else
+        }
 
-              # Special case #1: Singular A, zero order hold on inputs.
-              if(!ModelHasInput) {
-                  Xp[,k+1] <- PHI %*% Xf[,k]
-                }
-              else  {
-                  # matA is singular and has INPUT
-                  # CTSM Mathguide Special Case no.1 page 10
-               
-                  PHITilde      <- Ua.T %*% PHI %*% Ua
-                  PHITilde1     <- PHITilde[1:rankA,1:rankA,drop=FALSE]
-                  # PHITilde2     <- PHITilde[1:rankA,(rankA+1):dimX,drop=F]
-                  # PHITilde1Inv  <- solve(PHITilde1)
-
-                  ATilde    <- Ua.T %*% matA %*% Ua
-                  ATilde1   <- ATilde[1:rankA,1:rankA,drop=FALSE]
-                  ATilde2   <- ATilde[1:rankA,(rankA+1):dimX,drop=FALSE]
-                  ATilde1Inv <- solve.default(ATilde1)
-
-                  IntExpAtildeS <- ZERODIMXDIMX
-                  # Insert upper left part of matrix [1:rankA 1:rankA]
-                  IntExpAtildeS[1:rankA , 1:rankA] <- ATilde1Inv %*% (PHITilde1-DIAGRANKA)
-                  # Lower left part
-                  # IntExpAtildeS[(rankA+1):dimX , 1:rankA]   <- 0
-                  # Upper Right
-                  IntExpAtildeS[1:rankA,(rankA+1):dimX] <- ATilde1Inv %*%
-                      (IntExpAtildeS[1:rankA,1:rankA]-DIAGRANKA*tau)%*%ATilde2
-                  # Lower right
-                  # Changed 2007-12-03 SKLI IntExpAtildeS[(rankA+1):dimX,(rankA+1):dimX] <- diag(1,dimX-rankA)*tau
-                  IntExpAtildeS[(rankA+1):dimX,(rankA+1):dimX] <- DIAGDIMXRANKA*tau
-
-                  # Insert State prediction CTSM  (1.60)
-                  Xp[,k+1] <- PHI %*% Xf[,k]+ Ua %*% IntExpAtildeS %*% Ua.T %*% matB %*% Uk
-
-                  } # end else
-            }    # end else
         } #end for
 
         # Complete negLogLike  with second part CTSM page 3 (1.14)

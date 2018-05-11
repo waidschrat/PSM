@@ -7,7 +7,6 @@ function(phi, Model, Data) {
   # Do a forward Kalman Filter
   Obj <- LinKalmanFilter( phi , Model , Data , echo=FALSE, outputInternals=TRUE)
 
-  
 
   Time  <- Data[["Time"]]
   Y     <- Data[["Y"]]
@@ -36,7 +35,7 @@ function(phi, Model, Data) {
   matC  <- tmpM$matC
   matD  <- tmpM$matD 
   
-                                        # Output prediction covariance
+  # Output prediction covariance
   S   <- Model$S(phi=phi)
   X0  <- Model$X0(Time=Time[1], phi=phi, U = Uk)
   SIG <- Model$SIG(phi=phi)
@@ -48,7 +47,7 @@ function(phi, Model, Data) {
   dimX  <- nrow(X0)
 
 
-                                        # Init Smoothing arrays and variables
+  # Init Smoothing arrays and variables
   Xs <- array(NA, c(dimX,dimN))
   Ys <- array(NA, c(dimY,dimN))
   Ps <- array(NA, c(dimX,dimX,dimN))

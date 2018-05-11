@@ -137,57 +137,54 @@ function(phi, Model, Data) {
     }
     
     
-    #Do not predict for the last observation
-    if(k==dimT) break
-
-    
-    #Prediction equations
-    #Create Z combined variable
-
-    # Extract Upper part of covariance matrix
-    tmpP = PbFil[,,tau]
-    tmpP = tmpP[Index]
-
-    # Combine with s
-    Z = c(sf[,tau] , tmpP)
-
-    
-    #function dZ = dSmoothPred(t,Z,Uk,theta,fktList,dimX,Index,Xf);
-    #    ZOUT <- ode15s(@dSmoothPred,[T(tau) T(tau-1)], ...  
-    #       Z ,[],Uk,theta,fktList,dimX,Index,o.sub_foreward(tau-1));
-    timevec <- c(Time[tau],Time[tau-1]) 
-    ZOUT <- lsoda(y=Z, times=timevec, func=dSmoothPred, parms=Uk, rtol=1e-6, atol=1e-6)
-    
-    # convert back to state and PbPred covariance matrix
-    # %Store as predictions to timepoint tau-1
-    
-    #Store s
-    sPred[,tau-1] <- ZOUT[length(timevec),(1:dimX)+1]
-
- 
-    #Store PbPred
-    tmpP <- matXX
-    tmpP[Index] <- ZOUT[length(timevec),-(1:(dimX+1))]
-    if(dimX>1) {
-      tmpP[lower.tri(tmpP)] <- tmpP[upper.tri(tmpP)]
-    }
-    PbPred[,,tau-1] <- tmpP
-
-
-    
- 
-    if(DataHasDose ) {
-      # Check if dosing is occuring at this timepoint.
-      if( any(Time[tau-1]==Data$Dose$Time)) {
-        idxD = which(Time[tau-1]==Data$Dose$Time)
-        # Multiple dosing a timepoint[k]
-        for(cmt in 1:length(idxD))
-          sPred[,tau-1] <- sPred[,tau-1] -
-            tmpP[,Data$Dose$State[idxD[cmt]]]*Data$Dose$Amount[idxD[cmt]]
+    # Prediction, if the last time has not yet been reached
+    if(k<dimT){
+      #Prediction equations
+      #Create Z combined variable
+      
+      # Extract Upper part of covariance matrix
+      tmpP = PbFil[,,tau]
+      tmpP = tmpP[Index]
+      
+      # Combine with s
+      Z = c(sf[,tau] , tmpP)
+      
+      
+      #function dZ = dSmoothPred(t,Z,Uk,theta,fktList,dimX,Index,Xf);
+      #    ZOUT <- ode15s(@dSmoothPred,[T(tau) T(tau-1)], ...  
+      #       Z ,[],Uk,theta,fktList,dimX,Index,o.sub_foreward(tau-1));
+      timevec <- c(Time[tau],Time[tau-1]) 
+      ZOUT <- lsoda(y=Z, times=timevec, func=dSmoothPred, parms=Uk, rtol=1e-6, atol=1e-6)
+      
+      # convert back to state and PbPred covariance matrix
+      # %Store as predictions to timepoint tau-1
+      
+      #Store s
+      sPred[,tau-1] <- ZOUT[length(timevec),(1:dimX)+1]
+      
+      
+      #Store PbPred
+      tmpP <- matXX
+      tmpP[Index] <- ZOUT[length(timevec),-(1:(dimX+1))]
+      if(dimX>1) {
+        tmpP[lower.tri(tmpP)] <- tmpP[upper.tri(tmpP)]
+      }
+      PbPred[,,tau-1] <- tmpP
+      
+      
+      
+      
+      if(DataHasDose ) {
+        # Check if dosing is occuring at this timepoint.
+        if( any(Time[tau-1]==Data$Dose$Time)) {
+          idxD = which(Time[tau-1]==Data$Dose$Time)
+          # Multiple dosing a timepoint[k]
+          for(cmt in 1:length(idxD))
+            sPred[,tau-1] <- sPred[,tau-1] -
+              tmpP[,Data$Dose$State[idxD[cmt]]]*Data$Dose$Amount[idxD[cmt]]
+        }
       }
     }
-    
-
   }
 
 

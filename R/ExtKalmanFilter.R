@@ -15,7 +15,7 @@ function( phi, Model, Data, outputInternals=FALSE) {
   else {
     ModelHasInput <- TRUE
   }
-  U     <- if( !ModelHasInput) { NA } else { Data[["U"]] }
+  U     <- if(!ModelHasInput) { NA } else { Data[["U"]] }
 
   # Set Uk
   if(ModelHasInput) {
@@ -175,47 +175,46 @@ function( phi, Model, Data, outputInternals=FALSE) {
     }
     
     
-    # Abort state pred if finished
-    if(k==dimT) break
-
-    
-    ######################
-    # Prediction
-    ######################
-
-    Xstart <- Xf[,k]
-    # Add dose before starting to predict.
-    if(DataHasDose) {
-      # Check if dosing is occuring at this timepoint.
-      if( any(Time[k]==Data$Dose$Time)) {
-        idxD = which(Time[k]==Data$Dose$Time)
-        # Multiple dosing a timepoint[k]
-        for(cmt in 1:length(idxD)) {
-          Xstart[Data$Dose$State[idxD[cmt]]] <-
-            Xstart[Data$Dose$State[idxD[cmt]]] + Data$Dose$Amount[idxD[cmt]]
+    # Prediction, if the last time has not yet been reached
+    if(k < dimT){
+      ######################
+      # Prediction
+      ######################
+      
+      Xstart <- Xf[,k]
+      # Add dose before starting to predict.
+      if(DataHasDose) {
+        # Check if dosing is occuring at this timepoint.
+        if( any(Time[k]==Data$Dose$Time)) {
+          idxD = which(Time[k]==Data$Dose$Time)
+          # Multiple dosing a timepoint[k]
+          for(cmt in 1:length(idxD)) {
+            Xstart[Data$Dose$State[idxD[cmt]]] <-
+              Xstart[Data$Dose$State[idxD[cmt]]] + Data$Dose$Amount[idxD[cmt]]
+          }
         }
       }
+      
+      # Create Z combined variable
+      # Upper triangle of P
+      tmpP <- Pf[,,k,drop=FALSE]
+      tmpP <- tmpP[Index]
+      Z <- c( Xstart , tmpP)
+      
+      # Prediction of Z
+      timevec <- c(Time[k], Time[k+1]) 
+      ZOUT <- lsoda(y=Z, times=timevec, func=dSystemPred, parms=Uk, rtol=1e-6, atol=1e-6)
+      
+      # convert back to X,Pk
+      Xp[,k+1] <- ZOUT[length(timevec),1+(1:dimX)] #first col is time
+      
+      tmpP <- matXX
+      tmpP[Index] <- ZOUT[length(timevec),-(1:(dimX+1))]
+      if(dimX>1) {
+        tmpP[lower.tri(tmpP)] <- tmpP[upper.tri(tmpP)]
+      }
+      Pp[,,k+1] <- tmpP
     }
-   
-    # Create Z combined variable
-    # Upper triangle of P
-    tmpP <- Pf[,,k,drop=FALSE]
-    tmpP <- tmpP[Index]
-    Z <- c( Xstart , tmpP)
-
-    # Prediction of Z
-    timevec <- c(Time[k], Time[k+1]) 
-    ZOUT <- lsoda(y=Z, times=timevec, func=dSystemPred, parms=Uk, rtol=1e-6, atol=1e-6)
-    
-    # convert back to X,Pk
-    Xp[,k+1] <- ZOUT[length(timevec),1+(1:dimX)] #first col is time
-    
-    tmpP <- matXX
-    tmpP[Index] <- ZOUT[length(timevec),-(1:(dimX+1))]
-    if(dimX>1) {
-      tmpP[lower.tri(tmpP)] <- tmpP[upper.tri(tmpP)]
-    }
-    Pp[,,k+1] <- tmpP
     
   } #end loop over observations
 

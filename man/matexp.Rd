@@ -7,7 +7,7 @@
   approximation.
 }
 \usage{
-matexp(a, dt=1,order = 8)
+matexp(a, dt = 1, order = 8)
 }
 \arguments{
   \item{a}{ A square numeric matrix }
@@ -16,7 +16,7 @@ matexp(a, dt=1,order = 8)
 }
 \details{
   This implementation is based on Niels Rode Kristensens work. This package is also highly inspired
-  by David Firth's R package mexp. 
+  by David Firth's R package mexp.
 }
 \value{
   The matrix exponential is returned. The function issues an error if
@@ -38,7 +38,6 @@ matexp(a, dt=1,order = 8)
 \note{For indepth material on matrix exponentials - see Moler and van Loan (2003).}
 
 \examples{
-##
 ## The test cases have been taken directly from David Firths MEXP package.
 ##
 ##
@@ -49,7 +48,9 @@ test1 <- t(matrix(c(
     4, 2, 0,
     1, 4, 1,
     1, 1, 4), 3, 3))
+    
 matexp(test1)
+
 ## Results on Power Mac G3 under Mac OS 10.2.8
 ##                    [,1]               [,2]               [,3]
 ## [1,] 147.86662244637000 183.76513864636857  71.79703239999643
@@ -63,9 +64,10 @@ mexp2 <- function(matrix){
              Re(z$vectors \%*\% diag(exp(z$values)) \%*\%
                     solve(z$vectors))
 }
-try(
-mexp2(test1)
-) ## now gives an error from solve !
+
+try(mexp2(test1))
+
+## now gives an error from solve !
 ##
 ## older result was
 ##                   [,1]                [,2]               [,3]
@@ -83,7 +85,9 @@ test2 <- t(matrix(c(
     .7815750847907159, 25.72656945571064,  8.680737820540137,
    -2.289519314033932, 8.680737820540137,  34.39400925519054),
            3, 3))
+
 matexp(test2)
+
 ##                   [,1]               [,2]               [,3]
 ##[1,]   5496313853692357 -18231880972009844 -30475770808580828
 ##[2,] -18231880972009852  60605228702227024 101291842930256144
@@ -103,13 +107,17 @@ test3 <- t(matrix(c(
     -131, 19, 18,
     -390, 56, 54,
     -387, 57, 52), 3, 3))
+    
 matexp(test3)
+
 ##                    [,1]                [,2]                [,3]
 ##[1,] -1.5096441587713636 0.36787943910439874 0.13533528117301735
 ##[2,] -5.6325707997970271 1.47151775847745725 0.40600584351567010
 ##[3,] -4.9349383260294299 1.10363831731417195 0.54134112675653534
 ## -- agrees to 10dp with Ward (1977), p608.
+
 mexp2(test3)
+
 ##                   [,1]               [,2]                [,3]
 ##[1,] -1.509644158796182 0.3678794391103086 0.13533528117547022
 ##[2,] -5.632570799902948 1.4715177585023838 0.40600584352641989

@@ -108,7 +108,7 @@ PSM.simulate(Model, Data, THETA, deltaTime, longX=TRUE)
 mod = vector(mode="list")
 mod$Matrices = function(phi) {
   list(
-    matA=matrix(c(-phi$ka, 0, phi$ka, -phi$ke), nrow=2, ncol=2, byrow=T),
+    matA=matrix(c(-phi$ka, 0, phi$ka, -phi$ke), nrow=2, ncol=2, byrow=TRUE),
     matC=matrix(c(0, 1), nrow=1, ncol=2)
   )
 }
@@ -121,7 +121,7 @@ mod$S = function(phi) {
   matrix(c(phi$sigma), nrow=1, ncol=1)
 }
 mod$SIG = function(phi) {
-  matrix(c(0, 0, 0, phi$omega), nrow=2, ncol=2, byrow=T)
+  matrix(c(0, 0, 0, phi$omega), nrow=2, ncol=2, byrow=TRUE)
 }
 mod$X0 = function(Time, phi, U) {
   matrix(c(phi$dose, 0), nrow=2, ncol=1)
@@ -140,21 +140,19 @@ TheophPSM <- list()
 TheophPSM[[1]] <- list(Time = seq(0,25,5))
 set.seed(12345)
 
-\dontrun{#simulate and visualize ODE model (no volatility)
+#simulate and visualize ODE model (no volatility)
 
 parM <- c(ka = 1.58, ke = 0.08, dose = 9.54, omega = 0, sigma = 1.05, BSV_dose = 0)
-TheophSim <- PSM.simulate(mod, TheophPSM, THETA = parM, deltaTime = 0.01)
+TheophSim <- PSM.simulate(mod, TheophPSM, THETA = parM, deltaTime = 0.1)
 plot(TheophSim[[1]]$longTime, TheophSim[[1]]$longX[2,],
      type="l", ylab="concentration", xlab="time")
-
 
 #contrast it to SDE model
 
 parM <- c(ka = 1.58, ke = 0.08, dose = 9.54, omega = 0.34, sigma = 1.05, BSV_dose = 0)
-TheophSim <- PSM.simulate(mod, TheophPSM, THETA = parM, deltaTime = 0.01)
+TheophSim <- PSM.simulate(mod, TheophPSM, THETA = parM, deltaTime = 0.1)
 lines(TheophSim[[1]]$longTime, TheophSim[[1]]$longX[2,],
      ylab="concentration", xlab="time")
-}
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

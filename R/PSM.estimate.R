@@ -3,13 +3,9 @@ function(Model,Data,Par,CI=FALSE,trace=0, control=NULL, fast=TRUE) {
   dimS <- length(Data)
   for(i in 1:dimS) {
     check <- ModelCheck(Model,Data[[i]],Par)
-    if(!check$ok) {
-      errmsg <- check$errmsg
-      errmsg <- paste(errmsg, "- the error occured using data for individual", i)
-      break
-    }
+    if(!check$ok)
+      stop(paste(check$errmsg, "- the error occured using data for individual", i))
   }
-  if(!check$ok) stop(errmsg)
   Linear <- check$Linear
 
   if(trace>0)

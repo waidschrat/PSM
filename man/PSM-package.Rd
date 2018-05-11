@@ -5,13 +5,16 @@
   Population Stochastic Modelling
 }
 \description{
-  Mixed-effects models using Stochastic Differential Equations
+  Non-Linear Mixed-Effects Modelling using Stochastic Differential Equations
   
-  This package provides functions for estimation and simulation of
-  multivariate linear and non-linear mixed-effects models using stochastic
-  differential equations. The package allows for multidimensional input,
-  specification of dosage regimen and is able to return smoothed
-  estimates of model states.
+  Functions for fitting linear and non-linear mixed-effects models using
+  stochastic differential equations (SDEs). The package allows for any multivariate
+  non-linear time-variant model to be specified, and it also handles multidimensional
+  input, covariates, missing observations, and specification of dosage regimen.
+  The provided pipeline relies on the coupling of the FOCE algorithm and Kalman filtering
+  as outlined by Klim et al. (2009) and has been validated against the proprietary
+  software 'NONMEM' (Tornoe et al., 2005). Further functions are provided for finding smoothed
+  estimates of model states and for simulation.
 }
 
 \details{
@@ -40,21 +43,26 @@
 }
 
 \author{
-  Stig B. Mortensen and Soeren Klim
-  
-  Maintainer: Robert Miller <robert.miller@tu-dresden.de>
+  Stig B. Mortensen <stigbm@gmail.com>, Soeren Klim <soren@klimens.dk>, and Robert Miller <robert.miller@tu-dresden.de>
 }
 
 \references{
-  Stig B. Mortensen, Soeren Klim, Bernd Dammann, Niels R. Kristensen,
-  Henrik Madsen, Rune V. Overgaard. A matlab framework for estimation of
-  NLME models using stochastic differential equations: Application for
-  estimation of insulin secretion rates. J Pharmacokinet Pharmacodyn
-  (2007) 34:623-642.
-
-  Web:  \url{http://www.imm.dtu.dk/psm}
+  Klim, S., Mortensen, S. B., Kristensen, N. R., Overgaard, R. V., & Madsen, H. (2009). Population stochastic
+  modelling (PSM)—an R package for mixed-effects models based on stochastic differential equations. Computer
+  Methods and Programs in Biomedicine, 94:279-289.
   
-
+  Moler, C., & Van Loan, C. (2003). Nineteen dubious ways to compute the exponential of a matrix, twenty-five
+  years later. SIAM Review, 45:3-49.
+  
+  Mortensen, S. B., Klim, S., Dammann, B., Kristensen, N. R., Madsen, H., Overgaard, R. V. (2007).
+  A matlab framework for estimation of NLME models using stochastic differential equations: Application for
+  estimation of insulin secretion rates. Journal of Pharmacokinetics and Pharmacodynamics, 34:623-642.
+  
+  Tornoe, C. W., Overgaard, R. V., Agersoe, H., Nielsen, H. A., Madsen, H., & Jonsson, E. N. (2005). Stochastic
+  differential equations in NONMEM: implementation, application, and comparison with ordinary differential
+  equations. Pharmaceutical Research, 22:1247-1258.
+  
+  Web:  \url{http://www.imm.dtu.dk/psm}
 }
 \keyword{ package }
 \seealso{

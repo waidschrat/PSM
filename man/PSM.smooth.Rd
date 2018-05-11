@@ -75,6 +75,7 @@ PSM.smooth(Model, Data, THETA, subsample = 0, trace = 0, etaList = NULL)
       \item{Yp, R}{Predicted observations and observation
 	variances}
       \item{eta}{Estimated eta}
+      \item{etaSE}{Standard errors of eta}
       \item{negLogL}{Value of the negative log-likelihood function at
 	\code{THETA} (thus same value for all individuals).} 
 
@@ -89,7 +90,7 @@ PSM.smooth(Model, Data, THETA, subsample = 0, trace = 0, etaList = NULL)
 \references{Please visit \url{http://www.imm.dtu.dk/psm} or refer to the
   help page for \code{\link{PSM}}. } 
 
-\author{ Stig B. Mortensen and Soeren Klim }
+\author{ Stig B. Mortensen, Soeren Klim, and Robert Miller}
 
 \seealso{   \code{\link{PSM}}, \code{\link{PSM.estimate}},
   \code{\link{PSM.simulate}}, \code{\link{PSM.plot}}, \code{\link{PSM.template}}
@@ -110,7 +111,7 @@ TheophPSM = list()
 for(i in 1:length(unique(Theoph$Subject))){
   TheophPSM[[i]] = with(
     Theoph[Theoph$Subject == i,],
-    list(Y = conc, Time = Time)
+    list(Y = matrix(conc, nrow=1), Time = Time)
   )
 }
 
@@ -122,7 +123,7 @@ for(i in 1:length(unique(Theoph$Subject))){
 mod = vector(mode="list")
 mod$Matrices = function(phi) {
   list(
-    matA=matrix(c(-phi$ka, 0, phi$ka, -phi$ke), nrow=2, ncol=2, byrow=T),
+    matA=matrix(c(-phi$ka, 0, phi$ka, -phi$ke), nrow=2, ncol=2, byrow=TRUE),
     matC=matrix(c(0, 1), nrow=1, ncol=2)
   )
 }
@@ -135,7 +136,7 @@ mod$S = function(phi) {
   matrix(c(phi$sigma), nrow=1, ncol=1)
 }
 mod$SIG = function(phi) {
-  matrix(c(0, 0, 0, phi$omega), nrow=2, ncol=2, byrow=T)
+  matrix(c(0, 0, 0, phi$omega), nrow=2, ncol=2, byrow=TRUE)
 }
 mod$X0 = function(Time, phi, U) {
   matrix(c(phi$dose, 0), nrow=2, ncol=1)
@@ -154,13 +155,11 @@ parM = c(ka = 1.5, ke = 0.1, dose = 10, omega = .3, sigma = 1,
          BSV_dose = 0.015)
 pars = list(LB=parM*.25, Init=parM, UB=parM*1.75)
 
-
-\dontrun{
 #fit model and predict data
 
-fit = PSM.estimate(mod, TheophPSM, pars, trace = 1, fast = TRUE)
+fit = PSM.estimate(mod, TheophPSM, pars, trace = 1, fast = TRUE,
+  control=list(optimizer="optim", maxit=1))
 pred = PSM.smooth(mod, TheophPSM, fit$THETA)
-
 
 #visualize recovery performance
 
@@ -170,7 +169,6 @@ est_dose = fit$THETA["dose"] * exp(unlist(lapply(pred, function(x) x$eta)))
 plot(true_dose, est_dose,
   xlab="actually administered dose", ylab= "recovered dose")
 abline(lm(est_dose ~ true_dose), lty=2)
-}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

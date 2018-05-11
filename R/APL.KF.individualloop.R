@@ -28,13 +28,13 @@ function (theta,OMEGA,Model,Data,GUIFlag=0,fast=TRUE,Linear=NULL) {
   if(0) { #unconstrained
     controllist$reltol <- 1e-7
     out <- optim(par = rep(0,dimEta), fn = IndividualLL.KF , gr = IndividualLL.KF.gr,
-                 method = "BFGS", control = controllist, hessian = FALSE, 
+                 method = "BFGS", control = controllist, hessian = F, 
                  theta=theta, OMEGA=OMEGA, Model=Model, Data=Data, fast=fast)
   } else { #constrained
     controllist$factr <- 1e8
     out <- optim(par = rep(0,dimEta), fn = IndividualLL.KF, gr = IndividualLL.KF.gr,
                  method = "L-BFGS-B", lower = -4*sqrt(diag(OMEGA)),upper = 4*sqrt(diag(OMEGA)),
-                 control = controllist, hessian = FALSE, 
+                 control = controllist, hessian = F, 
                  theta=theta, OMEGA=OMEGA, Model=Model, Data=Data, fast=fast, Linear=Linear)
   }
   
@@ -90,7 +90,7 @@ function (theta,OMEGA,Model,Data,GUIFlag=0,fast=TRUE,Linear=NULL) {
 
   # RETURN neg. log. likelihood contribution
   list(   LiPart_i = .5*log(det(-1*h_Li/(2*pi))) + out$value,
-             eta_i = out$par,
+             eta_i = out$par, etaHessian_i = h_Li,
        optimStat_i = optimStat_i
        )
 }

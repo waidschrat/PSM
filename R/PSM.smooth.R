@@ -4,13 +4,10 @@ function(Model,Data,THETA,subsample=0,trace=0,etaList=NULL) {
   dimS <- length(Data)
   for(i in 1:dimS) {
     check <- ModelCheck(Model,Data[[i]],list(Init=THETA))
-    if(!check$ok) {
-      errmsg <- check$errmsg
-      errmsg <- paste(errmsg, "- the error occured using data for individual", i)
-      break
-    }
+    if(!check$ok)
+      stop(paste(check$errmsg, "- the error occured using data for individual", i))
   }
-  if(!check$ok) stop(errmsg)
+
   Linear <- check$Linear
   
   OMEGA <- Model$ModelPar(THETA)$OMEGA
@@ -21,8 +18,10 @@ function(Model,Data,THETA,subsample=0,trace=0,etaList=NULL) {
     apl <- APL.KF(THETA=THETA,Model=Model,Pop.Data=Data,GUIFlag=trace,
                    longOutput=TRUE,Linear=Linear)
     etaList <- apl$etaList
+    etaListSE <- lapply(apl$etaListHessian, function(x) sqrt(diag(solve(x))) )
     FullOutput <- TRUE
   }
+  
   
   dimY <- dim(Data[[1]]$Y)[1]
   lkf = vector(mode="list",length=dimS)
@@ -57,13 +56,13 @@ function(Model,Data,THETA,subsample=0,trace=0,etaList=NULL) {
         TT[idx0] <- Time[j]
         if(ModelHasInput)
           UU[,idx0] <- U[,j]
-        if(j==n)
-          break
-        YY[,(idx0+1):(idx0+subsample)] = NA
-        TT[(idx0+1):(idx0+subsample)] <- seq(from=Time[j],to=Time[j+1],
-                                             length.out=(subsample+2))[-c(1,subsample+2)]
-        if(ModelHasInput)
-          UU[,(idx0+1):(idx0+subsample)] = matrix(U[,j],nrow=dim(U)[1],ncol = subsample)
+        if(j<n){
+          YY[,(idx0+1):(idx0+subsample)] = NA
+          TT[(idx0+1):(idx0+subsample)] <- seq(from=Time[j],to=Time[j+1],
+                                               length.out=(subsample+2))[-c(1,subsample+2)]
+          if(ModelHasInput)
+            UU[,(idx0+1):(idx0+subsample)] = matrix(U[,j],nrow=dim(U)[1],ncol = subsample)
+        }
       }
       Di <- list(Y = YY, Time = TT, U = UU)
     }
@@ -87,6 +86,7 @@ function(Model,Data,THETA,subsample=0,trace=0,etaList=NULL) {
 
     if(FullOutput) {
       lkf[[i]]$eta <- etaList[,i]
+      lkf[[i]]$etaSE <- etaListSE[[i]]
       lkf[[i]]$negLogL <- apl$negLogLike
     } 
   } 

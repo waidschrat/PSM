@@ -3,21 +3,15 @@ function(Model, Data, THETA, deltaTime, longX=TRUE) {
 
   # Extract Dimenstions of Data and Check
   dimS <- length(Data)
-  if(dimS<1) {
-    print("Length of Data is less than 1.")
-    break
-  }
+  if(dimS<1)
+    stop("Length of Data is less than 1.")
   
   # Check Model and each Data element  
   for(i in 1:dimS) {
     check <- ModelCheck(Model,Data[[i]],list(Init=THETA),DataHasY=FALSE)
-    if(!check$ok) {
-      errmsg <- check$errmsg
-      errmsg <- paste(errmsg, "- the error occured using data for individual", i)
-      break
-    }
+    if(!check$ok)
+      stop(paste(check$errmsg, "- the error occured using data for individual", i))
   }
-  if(!check$ok) stop(errmsg)
 
   Linear = check$Linear
   # if(!Linear) stop('Simulation only implemented for linear models.')
@@ -156,66 +150,65 @@ function(Model, Data, THETA, deltaTime, longX=TRUE) {
         }
       
  
-        # Abort state pred if finished
-        if (k == n) break
-
-        # State prediction
-        tmp <- deltaTime * BigMat
-        tmp <- matexp(tmp)
-        PHI <- t.default( tmp[(dimX+1):(2*dimX),(dimX+1):(2*dimX),drop=FALSE])
-        IntExpASIG <- PHI %*% tmp[1:dimX,(dimX+1):(dimX*2),drop=FALSE]
-
-    # Different formulaes depending on A and INPUTS
-      if( !singA ) {
-      # Special case #3: Non-singular A, zero order hold on inputs.
-        X[,k+1] <- { if( ModelHasInput) {
-          PHI%*%X[,k,drop=FALSE] + solve.default(matA)%*%(PHI-DIAGDIMX)%*%matB%*%Uk
-        } else {
-          PHI%*%X[,k,drop=FALSE] } }
-      } else {
-      # Special case #1: Singular A, zero order hold on inputs.
-        if(!ModelHasInput) {
-          X[,k+1] <- PHI %*% X[,k,drop=FALSE]
-        }
-        else  {
-          if(rankA==0) { #only the zero matrix has rank 0, thus A=0: dx=b*u*deltaTime
-            X[,k+1] <- X[,k] +  matB*Uk*deltaTime
-          } else {
+        # Prediction, if the last time has not yet been reached
+        if (k < n){
+          # State prediction
+          tmp <- deltaTime * BigMat
+          tmp <- matexp(tmp)
+          PHI <- t.default( tmp[(dimX+1):(2*dimX),(dimX+1):(2*dimX),drop=FALSE])
+          IntExpASIG <- PHI %*% tmp[1:dimX,(dimX+1):(dimX*2),drop=FALSE]
           
-                  # matA is singular and has INPUT and dimX>1
-                  # CTSM Mathguide Special Case no.1 page 10
-            Ua <- svd(matA)$u
-            PHITilde      <- t.default(Ua) %*% PHI %*% Ua
-            PHITilde1     <- PHITilde[1:rankA,1:rankA,drop=FALSE]
-                  # PHITilde2     <- PHITilde[1:rankA,(rankA+1):dimX,drop=F]
-                  # PHITilde1Inv  <- solve(PHITilde1)
-            
-            ATilde    <- t.default(Ua) %*% matA %*% Ua
-            ATilde1   <- ATilde[1:rankA,1:rankA,drop=FALSE]
-            ATilde2   <- ATilde[1:rankA,(rankA+1):dimX,drop=FALSE]
-            ATilde1Inv <- solve.default(ATilde1)
-            
-            IntExpAtildeS <- matDIMXDIMX
-                  # Insert upper left part of matrix [1:rankA 1:rankA]
-            IntExpAtildeS[1:rankA , 1:rankA] <- ATilde1Inv %*% (PHITilde1-DIAGRANKA)
-                  # Lower left part
-            IntExpAtildeS[(rankA+1):dimX , 1:rankA]   <- 0
-                  # Upper Right
-            IntExpAtildeS[1:rankA,(rankA+1):dimX] <- ATilde1Inv %*%
-              (IntExpAtildeS[1:rankA,1:rankA]-DIAGRANKA*deltaTime)%*%ATilde2
-                  # Lower right
-            IntExpAtildeS[(rankA+1):dimX,(rankA+1):dimX] <- diag(1,dimX-rankA)*deltaTime
-
-                  # Insert State prediction CTSM  (1.60)
-            X[,k+1] <- PHI %*% X[,k]+ Ua %*% IntExpAtildeS %*% t.default(Ua) %*% matB %*% Uk
-          } # end if (A is zero matrix) else ...
-        } # end else
-      } # end else
-      
-    # Wiener noise
-      ew <- SIG %*% (sqrt(deltaTime) * eW[,k+1])
-      X[,k+1] <- X[,k+1] + ew
-    
+          # Different formulaes depending on A and INPUTS
+          if( !singA ) {
+            # Special case #3: Non-singular A, zero order hold on inputs.
+            X[,k+1] <- { if( ModelHasInput) {
+              PHI%*%X[,k,drop=FALSE] + solve.default(matA)%*%(PHI-DIAGDIMX)%*%matB%*%Uk
+            } else {
+              PHI%*%X[,k,drop=FALSE] } }
+          } else {
+            # Special case #1: Singular A, zero order hold on inputs.
+            if(!ModelHasInput) {
+              X[,k+1] <- PHI %*% X[,k,drop=FALSE]
+            }
+            else  {
+              if(rankA==0) { #only the zero matrix has rank 0, thus A=0: dx=b*u*deltaTime
+                X[,k+1] <- X[,k] +  matB*Uk*deltaTime
+              } else {
+                
+                # matA is singular and has INPUT and dimX>1
+                # CTSM Mathguide Special Case no.1 page 10
+                Ua <- svd(matA)$u
+                PHITilde      <- t.default(Ua) %*% PHI %*% Ua
+                PHITilde1     <- PHITilde[1:rankA,1:rankA,drop=FALSE]
+                # PHITilde2     <- PHITilde[1:rankA,(rankA+1):dimX,drop=F]
+                # PHITilde1Inv  <- solve(PHITilde1)
+                
+                ATilde    <- t.default(Ua) %*% matA %*% Ua
+                ATilde1   <- ATilde[1:rankA,1:rankA,drop=FALSE]
+                ATilde2   <- ATilde[1:rankA,(rankA+1):dimX,drop=FALSE]
+                ATilde1Inv <- solve.default(ATilde1)
+                
+                IntExpAtildeS <- matDIMXDIMX
+                # Insert upper left part of matrix [1:rankA 1:rankA]
+                IntExpAtildeS[1:rankA , 1:rankA] <- ATilde1Inv %*% (PHITilde1-DIAGRANKA)
+                # Lower left part
+                IntExpAtildeS[(rankA+1):dimX , 1:rankA]   <- 0
+                # Upper Right
+                IntExpAtildeS[1:rankA,(rankA+1):dimX] <- ATilde1Inv %*%
+                  (IntExpAtildeS[1:rankA,1:rankA]-DIAGRANKA*deltaTime)%*%ATilde2
+                # Lower right
+                IntExpAtildeS[(rankA+1):dimX,(rankA+1):dimX] <- diag(1,dimX-rankA)*deltaTime
+                
+                # Insert State prediction CTSM  (1.60)
+                X[,k+1] <- PHI %*% X[,k]+ Ua %*% IntExpAtildeS %*% t.default(Ua) %*% matB %*% Uk
+              } # end if (A is zero matrix) else ...
+            } # end else
+          } # end else
+          
+          # Wiener noise
+          ew <- SIG %*% (sqrt(deltaTime) * eW[,k+1])
+          X[,k+1] <- X[,k+1] + ew
+        }
     } #end for
 
 
@@ -273,16 +266,15 @@ function(Model, Data, THETA, deltaTime, longX=TRUE) {
           }
         }
         
-        # Abort state pred if finished
-        if (k == n) break
-        
-        # State Prediction
-        X[,k+1] <- X[,k] + deltaTime*f(x=X[,k],u=Uk,time=tseq[k],phi=phi)
-        
-        # Add Wiener noise
-        syserr <- Model$SIG(u=Uk,time=tseq[k],phi=phi) %*% (sqrt(deltaTime) * eW[,k+1])
-        X[,k+1] <- X[,k+1] + syserr
-
+        # Prediction, if the last time has not yet been reached
+        if (k < n){
+          # State Prediction
+          X[,k+1] <- X[,k] + deltaTime*f(x=X[,k],u=Uk,time=tseq[k],phi=phi)
+          
+          # Add Wiener noise
+          syserr <- Model$SIG(u=Uk,time=tseq[k],phi=phi) %*% (sqrt(deltaTime) * eW[,k+1])
+          X[,k+1] <- X[,k+1] + syserr
+        }
       } # End Looping over timepoints
       
     }  # End Non-Linear simulation

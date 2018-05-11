@@ -29,8 +29,9 @@ function (THETA,Model,Pop.Data,LB=NULL,UB=NULL,GUIFlag=0,longOutput=FALSE,fast=T
   etaList   <- matrix(0,nrow=dimEta,ncol=dimS)
   optimStat <- matrix(0,nrow=3,ncol=dimS)
   LiPart    <- matrix(0,nrow=1,ncol=dimS)
+  etaListHessian <- list()
   
-  if(GUIFlag>1) 
+  if(GUIFlag>1)
     starttime <- proc.time()[3]
   
 
@@ -44,6 +45,7 @@ function (THETA,Model,Pop.Data,LB=NULL,UB=NULL,GUIFlag=0,longOutput=FALSE,fast=T
       LiPart[i] <- result$LiPart_i
       etaList[,i] <- result$eta_i
       optimStat[,i] <- result$optimStat_i
+      etaListHessian[[i]] <- result$etaHessian_i
     }
     else {
       # OMEGA is NULL      
@@ -56,6 +58,7 @@ function (THETA,Model,Pop.Data,LB=NULL,UB=NULL,GUIFlag=0,longOutput=FALSE,fast=T
         LiPart[i] <- ExtKalmanFilter( phi=phi, Model=Model , Data=Pop.Data[[i]] )
       }
       etaList[,i] <- NaN
+      etaListHessian[[i]] <- NaN
       optimStat[,i] <- NaN
     }      
   }
@@ -64,7 +67,7 @@ function (THETA,Model,Pop.Data,LB=NULL,UB=NULL,GUIFlag=0,longOutput=FALSE,fast=T
   pen <- 0
   if (!is.null(LB)) {
      # Penalty-function
-      lambda = 1e-4 #værdi fra ctsm-userguide p. xx
+      lambda = 1e-4 #v?rdi fra ctsm-userguide p. xx
       dx = 1e-30    #
       for(i in 1:length(THETA)) pen = pen + lambda*(abs(LB[i])/(THETA[i]-LB[i]+dx) + abs(UB[i])/(UB[i]-THETA[i]+dx))
   }
@@ -79,7 +82,7 @@ function (THETA,Model,Pop.Data,LB=NULL,UB=NULL,GUIFlag=0,longOutput=FALSE,fast=T
   }
   
   if(longOutput) {
-    list(negLogLike=sum(LiPart)+pen,etaList=etaList,optimStat=optimStat)
+    list(negLogLike=sum(LiPart)+pen, etaList=etaList, etaListHessian=etaListHessian, optimStat=optimStat)
   } else {  
     #The return variable - neg. Log. Likelihood
     sum(LiPart)+pen
