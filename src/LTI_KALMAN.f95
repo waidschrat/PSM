@@ -80,7 +80,6 @@ DOUBLE PRECISION,DIMENSION(dimX,dimY,dimN),INTENT(OUT)  :: KGAIN
 ! INTERNALS
 DOUBLE PRECISION :: TAU,DETR,PS
 INTEGER :: I,J,K,PIVX(dimX),PIVY(dimY) !,IALLOC
-LOGICAL :: DEBUG
 LOGICAL, DIMENSION(dimY) :: LOBSINDEX
 INTEGER :: YCOUNT,TOTALMISSINGOBS,ID
 
@@ -98,14 +97,6 @@ DOUBLE PRECISION,DIMENSION(dimX) :: TMPX
 
 !-------------------------------------------------INITIALIZATIONS-----!
 !
-DEBUG = .FALSE.
-! DEBUG = .TRUE.
-
-IF(DEBUG) THEN
- !PRINT * , "Debugging Mode enabled - Done within the FORTRAN code"
- CALL INTPR("Debugging Mode enabled - Done within the FORTRAN code",53,0,0)
-END IF
-
 INFO = 0     !  INITIALIZE ERROR MESSAGE FLAG (= 0: NO ERROR)
 
 
@@ -179,11 +170,6 @@ PP(:,:,1) = PS*INTL
 XP(:,1)  = X0(:,1)
 
 
-IF(DEBUG) THEN
- !PRINT * , "Initial Statecovariance computed"
- CALL INTPR("Initial Statecovariance computed",32,0,0)
-END IF
-
 !COM------------------------------------------------------------------!
 !COM  SINGULARITY OF A (NON-SINGULAR)
 !COM------------------------------------------------------------------!
@@ -191,9 +177,6 @@ END IF
 AINV = A
 PIVX = 0
 INFO = 0
-IF(DEBUG) THEN
- CALL INTPR("A inverse",9,0,0)
-END IF
 
 CALL DGETRF(dimX,dimX,AINV,dimX,PIVX,INFO)
 
@@ -214,11 +197,6 @@ IF(INFO /= 0) THEN
  RETURN
 END IF
 
-IF (DEBUG) THEN
- CALL INTPR("*** STARTING LOOP", 17,0,0)
-END IF
-
-
 !------------------------------------------------KALMAN FILTERING-----!
 !
 KALMANLOOP: DO K = 1, dimN
@@ -226,25 +204,11 @@ KALMANLOOP: DO K = 1, dimN
 !-------------------------------------------------PREDICTION PART-----!
 !
 
-!IF(K > 3) THEN
-!	DEBUG = .FALSE.
-!END IF
-
-IF(DEBUG) THEN
- CALL INTPR("-------------------",10,K,0)
- CALL INTPR("LOOP:", 5,K,1)
- CALL DBLEPR("TIME:",5,TIME(K),1)
-END IF
-
 !COM------------------------------------------------------------------!
 !COM   OUTPUT PREDICTION YP(:,K) AT TIME 'K'
 !COM   REFERENCE:
 !COM   Eqn. (1.28) [CTSM 2.3 Math Guide, Dec. 2003, Kristensen, N.R.] !
 !COM------------------------------------------------------------------!
-
-IF(DEBUG) THEN
- CALL INTPR("***Prediction YP",16,0,0)
-END IF
 
 ! Calculate Y = C*X + D*U
 ! Store C*X temporary in YP
@@ -257,21 +221,12 @@ CALL DGEMV('N',dimY,dimX,1.0D0,C,dimY,XP(:,K), 1 ,0.0D0,YP(:,K), 1 )
 ! CALL DGEMV('N',dimY,dimU,1.0D0,D,dimY,U(:,K),dimU,1.0D0,YP(:,K),dimY)
 CALL DGEMV('N',dimY,dimU,1.0D0,D,dimY,U(:,K), 1 ,1.0D0,YP(:,K), 1)
 
-IF(DEBUG) THEN
- CALL DBLEPR("YP :",3 ,YP(:,K),dimY)
-END IF
-
 
 !COM------------------------------------------------------------------!
 !COM  MISSING OBSERVATIONS
 !COM  Eqn. (1.29) [CTSM 2.3 Math Guide, Dec. 2003, Kristensen, N.R.]  !
 !COM------------------------------------------------------------------!
 
-
-IF(DEBUG) THEN
- CALL INTPR("*** Missing Observations",24,0,0)
- CALL DBLEPR(" Y : " ,2, Y(:,K),dimY)
-END IF
 
 DO I = 1,DIMY
  !LOBSINDEX(I) = (Y(I,K) < HUGE(1.0D0) )
@@ -282,11 +237,6 @@ YCOUNT = COUNT(LOBSINDEX)
 
 ! UPDATE number of missing observations
 TOTALMISSINGOBS = TOTALMISSINGOBS + dimY - YCOUNT
-
-IF(DEBUG) THEN
- CALL INTPR("ObsINDEX:",9 , LOBSINDEX, dimY)
- CALL INTPR("YCOUNT :",8 , YCOUNT,1)
-END IF
 
 ! Create E matrix
 E = EYEDIMY
@@ -302,10 +252,6 @@ DO I=J,dimY
  E(J,:) = 0.0D0
 END DO
 
-IF(DEBUG) THEN
- CALL DBLEPR("E-Matrix:",9 , E , dimY*dimY)
-END IF
-
 !COM------------------------------------------------------------------!
 !COM  OUTPUT PREDICTION COVARIANCE MATRIX R(:,:,K)
 !COM  Eqn. (1.29) [CTSM 2.3 Math Guide, Dec. 2003, Kristensen, N.R.]  !
@@ -314,61 +260,31 @@ END IF
 ! Calculate R= E * C * P *T(C)*T(E) + E*S*T(E)
 ! First TMP = C*P
 
-IF(DEBUG) THEN
- CALL INTPR("*** R Calculation",17,0,0)
-END IF
-
 ! First 	E*C
 ! F77 call dgemm(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
 CALL DGEMM('N','N', YCOUNT, dimX, dimY, 1.0D0, E , dimY, C , dimY, &
    0.0D0, TMPYX, dimY)
 
-IF(DEBUG) THEN
- CALL DBLEPR("C:",2,C,dimY*dimX)
- CALL DBLEPR("E*C:",4,TMPYX,dimY*dimX)
-END IF
-
 ! Then (E*C)*P
 CALL DGEMM('N','N', YCOUNT, dimX, dimX, 1.0D0, TMPYX , dimY , PP(:,:,K), dimX , &
    0.0D0, TMP2YX, dimY)
-IF(DEBUG) THEN
- CALL DBLEPR("PP:",3,PP(:,:,K),dimX*dimX)
- CALL DBLEPR("(E*C)*PP:",9,TMP2YX,dimY*dimX)
-END IF
-      
+
 ! THEN (E*C*P)*T(C)
 CALL DGEMM('N','T', YCOUNT, dimY, dimX, 1.0D0, TMP2YX , dimY , C , dimY , &
    0.0D0, TMPYY, dimY)
-IF(DEBUG) THEN
- CALL DBLEPR("(E*C*P)*T(C):",13,TMPYY,dimY*dimY)
-END IF
       
 ! THEN (E*C*P*T(C) ) * T(E)
 CALL DGEMM('N','T', YCOUNT, YCOUNT, dimY, 1.0D0, TMPYY , dimY , E , dimY , &
    0.0D0, TMP2YY, dimY)
-   
-IF(DEBUG) THEN
- CALL DBLEPR("(E*C*P*T(C) )*T(E):",19,TMP2YY,dimY*dimY)
-END IF
 
-   
-IF(DEBUG) THEN
- CALL DBLEPR("S:",2,S,dimY*dimY)
-END IF
 ! THEN E*S
 CALL DGEMM('N','N', YCOUNT, dimY, dimY, 1.0D0, E , dimY , S , dimY , &
    0.0D0, TMPYY, dimY)
-IF(DEBUG) THEN
- CALL DBLEPR("E*S:",4,TMPYY,dimY*dimY)
-END IF
    
 ! THEN (E*S) * T(E) 
 CALL DGEMM('N','T', YCOUNT, YCOUNT, dimY, 1.0D0, TMPYY , dimY , E , dimY , &
    0.0D0, TMP3YY, dimY)
 
-IF(DEBUG) THEN
- CALL DBLEPR("(E*S) * T(E):",13 , TMP3YY,dimY*dimY)
-END IF
    
 
 
@@ -378,10 +294,6 @@ DO I=1,dimY
   R(I,J,K) = TMP2YY(I,J) + TMP3YY(I,J)            
  END DO
 END DO
-   
-IF(DEBUG) THEN
- CALL DBLEPR("R : ",3 , R(:,:,K),dimY*dimY)
-END IF
 
 
 
@@ -393,10 +305,6 @@ NO_OBS: IF(YCOUNT > 0) THEN
 !COM  KALMAN GAIN KGAIN
 !COM  Eqn. (1.31) [CTSM 2.3 Math Guide, Dec. 2003, Kristensen, N.R.]  !
 !COM------------------------------------------------------------------!
-
-IF(DEBUG) THEN
- CALL INTPR("*** Kalman gain",16,0,0)
-END IF
 
 ! Calculate the Inverse R
 PIVY = 0                ! PIVOT INDICIES FOR LU-FACTORIZATION
@@ -423,12 +331,6 @@ END IF
 ! Remember  that only upper [YCOUNT ; YCOUNT] is valid
 RINV(:,:,K) = TMPYY
 
-
-IF(DEBUG) THEN
- CALL DBLEPR("RINV(:,:,K):",12, RINV(:,:,K),dimY*dimY)
-END IF
-
-
 ! Calculate kalman gain
 ! K = P*T(C)*T(E)*Inv(R)
 
@@ -444,19 +346,10 @@ CALL DGEMM('N','T',dimX,YCOUNT,dimY,1.0D0,TMPXY,dimX, &
 CALL DGEMM('N','N', dimX, YCOUNT, YCOUNT, 1.0D0, TMP2XY, dimX, &
    RINV(:,:,K), dimY, 0.0D0, KGAIN(:,:,K), dimX)
 
-IF(DEBUG) THEN
- CALL DBLEPR("KGain : P*T(C)*T(E)*Inv(R) : ", 28 , KGAIN(:,:,K), dimX*dimX)
-END IF
-
-
 !------------------------------------------------------------------!
 ! LikeLihood contribution
 !------------------------------------------------------------------!
 ! Add contribution to the loglikelihood from this observation
-
-IF(DEBUG) THEN
- CALL INTPR("*** Likelihood Contribution",27,0,0)
-END IF
 
 ! .5*(ln(det(R)) + e*Inv(R)*eT)
 YPERR(:,K)  = Y(:,K) - YP(:,K)     ! INNOVATION AT TIME K
@@ -475,10 +368,6 @@ END DO
 CALL DGEMV('N',dimY,dimY,1.0D0,E,dimY,YPERR(:,K),1,&
    0.0D0,ERR, 1)
 
-IF(DEBUG) THEN
- CALL DBLEPR("ERR :"  ,5 , ERR,dimY)
-END IF
-
 CALL DGEMV('N',YCOUNT,YCOUNT,1.0D0,RINV(:,:,K),dimY,ERR,1,&
    0.0D0,TMPY,1)
 
@@ -490,22 +379,11 @@ CALL DTRM( R(:,:,K),YCOUNT,DETR,PIVY)
 ! LL = LL  + LOG(DETR) + DOT(ERR,TMPY)
 LL = LL  + 0.5D0*(LOG(DETR) + DOT_PRODUCT(ERR(1:YCOUNT),TMPY(1:YCOUNT)))
 
-IF(DEBUG) THEN
- CALL DBLEPR("log(DETR) :",11,LOG(DETR),1)
- CALL DBLEPR("wE : ",4 ,  DOT_PRODUCT(ERR(1:YCOUNT),TMPY(1:YCOUNT)),1)
- CALL DBLEPR("dLL : ",5  , 0.5D0*(LOG(DETR) + DOT_PRODUCT(ERR(1:YCOUNT),TMPY(1:YCOUNT))) ,1)
-END IF
-
-
 
 !COM------------------------------------------------------------------!
 !COM   UPDATED STATE VARIABLE VECTOR XF(:,K)                          !
 !COM   Eqn. (1.32) [CTSM 2.3 Math Guide, Dec. 2003, Kristensen, N.R.] !
 !COM------------------------------------------------------------------!
-
-IF (DEBUG) THEN
- CALL INTPR("*** Update State variable XF=XP + KGAIN*E",41,0,0)
-ENDIF
 
 ! XF = XP + KGAIN *E*YPERR
 
@@ -520,11 +398,6 @@ CALL DGEMV('N',dimX,YCOUNT,1.0D0,KGAIN(:,:,K),dimX,TMPY, 1,&
 
 XF(:,K) = XP(:,K) + XF(:,K)
 
-IF (DEBUG) THEN
- CALL DBLEPR("XF : ",4 , XF(:,K),dimX)
-ENDIF
-
-
 !
 !COM------------------------------------------------------------------!
 !COM   UPDATED STATE COVARIANCE MATRIX PF(:,:,K)                      !
@@ -533,12 +406,6 @@ ENDIF
 !
 ! MATH FORMULAE
 ! PF = PP - K*R*T(K)
-
-
-IF(DEBUG) THEN
- CALL INTPR("*** Updating State Covariance matrix PF= PP - K*R*T(K)",54,0,0)
-END IF
-
 
 CALL DGEMM('N','N',dimX, YCOUNT, YCOUNT, 1.0D0, KGAIN(:,:,K), dimX, &
    R(:,:,K), dimY, 0.0D0, TMPXY, dimX)
@@ -554,20 +421,10 @@ DO I=1,dimX
 END DO
 
 
-IF(DEBUG) THEN
- CALL DBLEPR("PF : ",4 , PF(:,:,K),dimX*dimX)
-END IF
-
 ELSE
  ! No OBSERVATION AT TIME[K]  -> No Update Only Pred
  XF(:,K) = XP(:,K)
  PF(:,:,K) = PP(:,:,K)
-
- IF(DEBUG) THEN
-  CALL INTPR("No Observations -> Filtered = Prediction",40,0,0)
-  CALL DBLEPR("XF : ",4 , XF(:,K),dimX)
-  CALL DBLEPR("PF : ",4 , PF(:,:,K), dimX*dimX)
- END IF
 
 END IF NO_OBS
 
@@ -581,11 +438,6 @@ END IF NO_OBS
 DO I=1,DoseN
  ! CHECK IF DOSING SHOULD OCCUR
  IF( DoseTime(I)==TIME(K) ) THEN
-
-  IF(DEBUG) THEN
-   CALL DBLEPR("Dosing at time " ,14, TIME(K) ,1)
-   CALL INTPR("in CMT:",7,DoseState(I),1)
-  ENDIF
 
   XF(DoseState(I),K) = XF(DoseState(I),K) + DoseAmt(I)
 
@@ -606,15 +458,6 @@ END IF
 !COM   Eqn. (1.35) using Eqn. (1.45), (1.47), (1.48) and (1.49)       !
 !COM   [CTSM 2.3 Math Guide, Dec. 2003, Kristensen, N.R.]             !
 !COM------------------------------------------------------------------!
-
-IF(DEBUG) THEN
- CALL INTPR("*** State Prediction Covariance matrix : PP",43,0,0)
-END IF
-
-IF(DEBUG) THEN
- CALL INTPR("Step1",5,0,0)
-END IF
-
 
 TAU = TIME(K+1)-TIME(K)
 
@@ -644,12 +487,6 @@ DO I=1,dimX
  ENDDO
 ENDDO
 
-IF(DEBUG) THEN
- CALL DBLEPR("PP : ",4 , PP(:,:,K+1),dimX*dimX)
-END IF
-
-
-
 !COM------------------------------------------------------------------!
 !COM   STATE PREDICTION XP(:,K+1)                                     !
 !COM------------------------------------------------------------------!
@@ -661,10 +498,6 @@ END IF
 ! First Part of (1.65)
 
 ! XP = PHI*XF + AINV*(PHIS-EYE)*B*U
-
-IF(DEBUG) THEN
- CALL INTPR("*** State Prediction  XP = PHI*XF + AINV*(PHIS-EYE)*B*U",55,0,0)
-ENDIF
 
 ! F95 CALL DGEMV(PHIS, XF(:,K), XP(:,K+1), 1.0D0,0.0D0,'N')
 CALL DGEMV('N',dimX,dimX,1.0D0,PHIS,dimX,XF(:,K), 1 ,&
@@ -694,10 +527,6 @@ CALL DGEMV('N',dimX,dimU,1.0D0,TMPXU,dimX,U(:,K), 1 ,&
 
 END DO KALMANLOOP
 
-IF(DEBUG) THEN
- CALL INTPR("**** Loop finished",18,0,0)
-ENDIF
-
 !---------------------------------------------------------------------!
 ! COMPUTE MINUS LOG-LIKELIHOOD VALUE: -LN(L(PHI,Y-Y0))                !
 !---------------------------------------------------------------------!
@@ -706,10 +535,6 @@ LL = LL + 0.5D0*(LOG(2.0D0*PI)*(dimN*dimY-TOTALMISSINGOBS) )
 
 ! Set No Errors
 INFO = 0
-
-IF(DEBUG) THEN
- CALL DBLEPR("Inside Fortran LL: " ,19 ,LL,1)
-END IF
 
 MISSINGOBS: DO K = dimN,1,-1
 DO I = 1,DIMY
