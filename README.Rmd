@@ -1,0 +1,23 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# PSM - Population Stochastic Modelling
+
+This R package provides functions for fitting linear and non-linear mixed-effects models using stochastic differential equations (SDEs). The package allows for any multivariate non-linear time-variant model to be specified, and it also handles multidimensional input, covariates, missing observations, and specification of dosage regimen.
+
+The original PSM homepage of the DTU Department of Informatics and Mathematical Modeling is located at <http://www.imm.dtu.dk/psm>.
+PSM builds upon CTSM <https://ctsm.info/>, which has been developed mainly for single individual modelling but also handles multiple individuals using a pooled likehood. CTSM is based on Fortran and will thus generally run faster than PSM for identical models.
+
+The provided pipeline relies on the coupling of the FOCE algorithm and Kalman filtering as outlined by Klim et al (2009) and has been validated against the proprietary software 'NONMEM' (Tornoe et al, 2005). Further functions are provided for finding smoothed estimates of model states and for simulation.

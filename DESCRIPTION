@@ -1,11 +1,10 @@
 Package: PSM
 Type: Package
 Title: Non-Linear Mixed-Effects Modelling using Stochastic Differential Equations
-Version: 0.8-12
+Version: 0.0.0.9000
 Date: 2018-11-05
 Encoding: UTF-8
 Author: Stig Bousgaard Mortensen, Soeren Klim, Robert Miller
-Maintainer: Robert Miller <robert.miller@tu-dresden.de>
 Imports: deSolve, graphics, MASS, numDeriv, stats, ucminf
 Suggests: datasets
 Description: Functions for fitting linear and non-linear mixed-effects models using
@@ -17,4 +16,6 @@ Description: Functions for fitting linear and non-linear mixed-effects models us
         software 'NONMEM' (Tornoe et al, 2005). Further functions are provided for finding
         smoothed estimates of model states and for simulation.
 License: GPL (>= 2)
-URL: http://www.imm.dtu.dk/psm
+URL: https://github.com/waidschrat/PSM.git
+Authors@R: person('Robert', 'Miller', email = 'r.miller@phb.de', role = c('cre', 'aut'))
+BugReports: https://github.com/waidschrat/PSM.git/issues
